@@ -124,6 +124,8 @@ function initials(name="") {
 
 function App() {
   const [urlDraft,   setUrlDraft]   = useState("");
+  const GAS_URL = "https://script.google.com/macros/s/https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec/exec";
+if (GAS_URL && !localStorage.getItem("wt_gasUrl")) localStorage.setItem("wt_gasUrl", GAS_URL);
   const [setupDone,  setSetupDone]  = useState(!!localStorage.getItem("wt_gasUrl"));
   const [tab,        setTab]        = useState("dashboard");
   const [employees,  setEmployees]  = useState([]);
