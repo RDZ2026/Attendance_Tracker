@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workforce Tracker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f5f7; color: #1a1a2e; min-height: 100vh; }
+    #root { max-width: 1200px; margin: 0 auto; padding: 0 20px 40px; }
+
+    button {
+      font-family: inherit; font-size: 13px; padding: 7px 14px;
+      border: 1px solid #d0d5dd; background: #fff; color: #344054;
+      border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    button:hover { background: #f9fafb; border-color: #b0b7c3; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    button.primary { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+    button.primary:hover { background: #1e40af; }
+    button.danger { color: #b91c1c; border-color: #fca5a5; }
+    button.danger:hover { background: #fef2f2; }
+
+    input, select {
+      font-family: inherit; font-size: 13px; padding: 8px 12px;
+      border: 1px solid #d0d5dd; border-radius: 8px; color: #1a1a2e;
+      background: #fff; width: 100%; outline: none; transition: border-color 0.15s;
+    }
+    input:focus, select:focus { border-color: #1d4ed8; box-shadow: 0 0 0 3px rgba(29,78,216,0.1); }
+    input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #1d4ed8; }
+    input[type="number"] { width: 80px; }
+
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; }
+    .nav { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid #e5e7eb; margin-bottom: 24px; padding-top: 20px; }
+    .nav-btn { border: none; border-radius: 8px 8px 0 0; border-bottom: 2px solid transparent; padding: 10px 16px; font-size: 14px; background: transparent; margin-bottom: -1px; }
+    .nav-btn.active { border-bottom: 2px solid #1d4ed8; color: #1d4ed8; font-weight: 500; }
+
+    .ts-header { display: grid; grid-template-columns: 2fr 1fr 1.2fr 120px 200px 1fr; gap: 8px; padding: 10px 16px; font-size: 11px; color: #6b7280; font-weight: 600; letter-spacing: 0.5px; border-bottom: 1px solid #e5e7eb; }
+    .ts-row    { display: grid; grid-template-columns: 2fr 1fr 1.2fr 120px 200px 1fr; gap: 8px; padding: 10px 16px; align-items: center; font-size: 13px; }
+    .ts-row:nth-child(even) { background: #f9fafb; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; padding: 12px 18px; border-radius: 10px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+    .toast.success { background: #ecfdf5; color: #065f46; border: 1px solid #6ee7b7; }
+    .toast.error   { background: #fef2f2; color: #991b1b; border: 1px solid #fca5a5; }
+
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .modal { background: #fff; border-radius: 14px; padding: 28px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+
+    .badge { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+    .badge.green { background: #ecfdf5; color: #065f46; }
+    .badge.red   { background: #fef2f2; color: #991b1b; }
+    .badge.blue  { background: #eff6ff; color: #1d4ed8; }
+    .badge.today { background: #fef3c7; color: #92400e; }
+
+    .prog-track { height: 5px; background: #e5e7eb; border-radius: 3px; overflow: hidden; }
+    .prog-fill  { height: 5px; border-radius: 3px; transition: width 0.5s ease; }
+
+    .emp-grid  { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+    .emp-card  { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; }
+    .dept-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
+    .dept-card { background: #f9fafb; border-radius: 10px; padding: 14px; }
+    .avatar    { width: 38px; height: 38px; border-radius: 50%; background: #dbeafe; color: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
+
+    .setup      { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; text-align: center; gap: 12px; }
+    .setup-icon { width: 56px; height: 56px; border-radius: 14px; background: #dbeafe; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .setup input { max-width: 500px; }
+    label.field { display: block; font-size: 12px; color: #6b7280; margin-bottom: 5px; font-weight: 500; }
+
+    .day-pill { font-size: 11px; font-weight: 700; padding: 3px 7px; border-radius: 6px; border: 1px solid #fca5a5; background: #fef2f2; color: #991b1b; cursor: default; }
+    .abs-day-row { display: grid; grid-template-columns: 20px 90px 1fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+    .abs-day-row:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useRef } = React;
+
+const DEPARTMENTS = ["Molding", "VJ Assembly", "CNC", "Gasket", "Paint"];
+const DAYS        = ["monday","tuesday","wednesday","thursday","friday"];
+const DAY_LABELS  = { monday:"Mon", tuesday:"Tue", wednesday:"Wed", thursday:"Thu", friday:"Fri" };
+const REASONS     = ["Sick","No Call / No Show","Personal","Approved Leave","Late - Half Day","Other"];
+
+function getWeekEnd(offset=0) {
+  const d = new Date();
+  const sat = new Date(d);
+  sat.setDate(d.getDate() + (6 - d.getDay()) + offset * 7);
+  sat.setHours(0,0,0,0);
+  return sat;
+}
+
+function getWeekDates(sat) {
+  return DAYS.map((_,i)=>{
+    const d = new Date(sat);
+    d.setDate(sat.getDate()-5+i);
+    return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"});
+  });
+}
+
+function fmtDate(iso) {
+  if (!iso) return "—";
+  const p = String(iso).split("-");
+  return p.length<3 ? iso : `${p[1]}/${p[2]}/${p[0]}`;
+}
+
+function daysUntilBirthday(bday) {
+  if (!bday) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const p = String(bday).split("-");
+  if (p.length<3) return null;
+  const next = new Date(today.getFullYear(), +p[1]-1, +p[2]);
+  if (next < today) next.setFullYear(today.getFullYear()+1);
+  return Math.round((next-today)/86400000);
+}
+
+function initials(name="") {
+  return name.trim().split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();
+}
+
+function App() {
+  const [urlDraft,   setUrlDraft]   = useState("");
+  const [setupDone,  setSetupDone]  = useState(!!localStorage.getItem("wt_gasUrl"));
+  const [tab,        setTab]        = useState("dashboard");
+  const [employees,  setEmployees]  = useState([]);
+  const [timesheets, setTimesheets] = useState([]);
+  const [absences,   setAbsences]   = useState([]);
+  const [weekOff,    setWeekOff]    = useState(0);
+  const [loading,    setLoading]    = useState(false);
+  const [toast,      setToast]      = useState(null);
+  const [modal,      setModal]      = useState(null);
+  const [absModal,   setAbsModal]   = useState(null);
+  const [absForm,    setAbsForm]    = useState({});
+  const [form,       setForm]       = useState({});
+  const [sending,    setSending]    = useState(false);
+  const toastTimer = useRef(null);
+
+  const weekEnd    = getWeekEnd(weekOff);
+  const weekEndStr = weekEnd.toISOString().split("T")[0];
+  const weekDates  = getWeekDates(weekEnd);
+
+  const notify = (msg, type="success") => {
+    clearTimeout(toastTimer.current);
+    setToast({msg,type});
+    toastTimer.current = setTimeout(()=>setToast(null), 3500);
+  };
+
+  const call = useCallback(async (params) => {
+    const url = localStorage.getItem("wt_gasUrl");
+    if (!url) return null;
+    try {
+      const u = new URL(url);
+      Object.entries(params).forEach(([k,v]) =>
+        u.searchParams.set(k, typeof v==="object" ? JSON.stringify(v) : String(v))
+      );
+      const res = await fetch(u.toString(), {redirect:"follow"});
+      if (!res.ok) throw new Error("HTTP "+res.status);
+      return await res.json();
+    } catch(e) {
+      notify("Connection error: "+e.message, "error");
+      return null;
+    }
+  },[]);
+
+  const loadEmployees  = useCallback(async()=>{
+    setLoading(true);
+    const d = await call({action:"getEmployees"});
+    if (d?.employees) setEmployees(d.employees);
+    setLoading(false);
+  },[call]);
+
+  const loadTimesheets = useCallback(async()=>{
+    const d = await call({action:"getTimesheets", weekEnd:weekEndStr});
+    if (d?.timesheets) setTimesheets(d.timesheets);
+  },[call,weekEndStr]);
+
+  const loadAbsences   = useCallback(async()=>{
+    const d = await call({action:"getAbsences", weekEnd:weekEndStr});
+    if (d?.absences) setAbsences(d.absences);
+  },[call,weekEndStr]);
+
+  useEffect(()=>{ if(setupDone) loadEmployees(); },[setupDone]);
+  useEffect(()=>{ if(setupDone){ loadTimesheets(); loadAbsences(); } },[setupDone,weekEndStr]);
+
+  const connect = ()=>{
+    if (!urlDraft.trim()) return;
+    localStorage.setItem("wt_gasUrl", urlDraft.trim());
+    setSetupDone(true);
+  };
+
+  const saveEmployee = async()=>{
+    if (!form.name||!form.eid||!form.department){ notify("Name, EID, Department required","error"); return; }
+    const res = await call({action: modal==="edit"?"updateEmployee":"addEmployee", data:form});
+    if (res?.success){ notify(modal==="edit"?"Employee updated":"Employee added"); setModal(null); loadEmployees(); }
+    else notify(res?.error||"Save failed","error");
+  };
+
+  const deleteEmployee = async(eid,name)=>{
+    if (!confirm(`Remove ${name}?`)) return;
+    const res = await call({action:"deleteEmployee", eid});
+    if (res?.success){ notify("Employee removed"); loadEmployees(); }
+  };
+
+  const tsFor  = eid => timesheets.find(t=>t.eid===eid)||{};
+  const absFor = eid => absences.find(a=>a.eid===eid)||{};
+
+  const saveTs = async(emp,patch)=>{
+    const cur  = tsFor(emp.eid);
+    const data = {weekEnd:weekEndStr, eid:emp.eid, name:emp.name, department:emp.department,
+      hours:cur.hours??0, submitted:cur.submitted??false, submittedAt:cur.submittedAt??"", ...patch};
+    if (patch.submitted===true  && !cur.submitted) data.submittedAt = new Date().toISOString();
+    if (patch.submitted===false) data.submittedAt = "";
+    const res = await call({action:"submitTimesheet", data});
+    if (res?.success) loadTimesheets();
+    else notify("Save failed","error");
+  };
+
+  const openAbsModal = emp=>{
+    const cur = absFor(emp.eid);
+    const f   = {};
+    DAYS.forEach(d=>{ f[d]=cur[d]||""; });
+    setAbsForm(f);
+    setAbsModal(emp);
+  };
+
+  const saveAbsences = async()=>{
+    const data = {weekEnd:weekEndStr, eid:absModal.eid, name:absModal.name,
+      department:absModal.department, loggedAt:new Date().toISOString(), ...absForm};
+    const res = await call({action:"saveAbsences", data});
+    if (res?.success){ notify("Absences saved"); setAbsModal(null); loadAbsences(); }
+    else notify("Save failed","error");
+  };
+
+  const sendReminder = async()=>{
+    setSending(true);
+    const res = await call({action:"sendReminder", weekEnd:weekEndStr});
+    setSending(false);
+    if (res?.success) notify("Reminder email sent!");
+    else notify("Failed to send","error");
+  };
+
+  const submitted    = new Set(timesheets.filter(t=>t.submitted===true||t.submitted==="TRUE").map(t=>t.eid));
+  const unsubmitted  = employees.filter(e=>!submitted.has(e.eid));
+  const pct          = employees.length ? Math.round((submitted.size/employees.length)*100) : 0;
+  const birthdays    = employees.map(e=>({...e,days:daysUntilBirthday(e.birthday)}))
+                                .filter(e=>e.days!==null&&e.days<=7).sort((a,b)=>a.days-b.days);
+  const totalAbsDays = absences.reduce((s,a)=>s+DAYS.filter(d=>a[d]&&a[d]!=="").length, 0);
+
+  // ── Setup ────────────────────────────────────────────────────────────────
+  if (!setupDone) return (
+    <div className="setup">
+      <div className="setup-icon"><i className="ti ti-building-factory-2" style={{fontSize:28,color:"#1d4ed8"}} /></div>
+      <h1 style={{fontSize:24,fontWeight:600}}>Workforce Tracker</h1>
+      <p style={{color:"#6b7280",fontSize:14,maxWidth:400}}>Paste your Google Apps Script web app URL to connect your Google Sheet.</p>
+      <div style={{display:"flex",gap:8,width:"100%",maxWidth:520}}>
+        <input value={urlDraft} onChange={e=>setUrlDraft(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&connect()} placeholder="https://script.google.com/macros/s/..." />
+        <button className="primary" onClick={connect}>Connect</button>
+      </div>
+    </div>
+  );
+
+  // ── Main ─────────────────────────────────────────────────────────────────
+  return (
+    <div>
+      <div style={{display:"flex",alignItems:"center",paddingTop:20}}>
+        <i className="ti ti-building-factory-2" style={{fontSize:22,color:"#1d4ed8",marginRight:8}} />
+        <span style={{fontWeight:700,fontSize:18}}>Workforce Tracker</span>
+        <div style={{flex:1}} />
+        <button onClick={()=>{setUrlDraft(localStorage.getItem("wt_gasUrl")||"");setSetupDone(false);}} style={{fontSize:12,color:"#9ca3af"}}>
+          <i className="ti ti-settings" style={{fontSize:13}} /> Settings
+        </button>
+      </div>
+
+      <div className="nav">
+        {[{id:"dashboard",icon:"ti-layout-dashboard",label:"Dashboard"},
+          {id:"employees", icon:"ti-users",           label:"Employees"},
+          {id:"timesheets",icon:"ti-clipboard-check", label:"Timesheets"}].map(({id,icon,label})=>(
+          <button key={id} className={`nav-btn ${tab===id?"active":""}`} onClick={()=>setTab(id)}>
+            <i className={`ti ${icon}`} style={{fontSize:15}} /> {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── DASHBOARD ── */}
+      {tab==="dashboard" && (
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+
+          <div className="card">
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:0.6,marginBottom:14}}>THIS WEEK — TIMESHEETS</p>
+            <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:6}}>
+              <span style={{fontSize:48,fontWeight:700,lineHeight:1,color:pct===100?"#065f46":"#1a1a2e"}}>{submitted.size}</span>
+              <span style={{fontSize:20,color:"#9ca3af"}}>/ {employees.length}</span>
+            </div>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:14}}>submitted this week</p>
+            <div className="prog-track" style={{marginBottom:12}}>
+              <div className="prog-fill" style={{width:`${pct}%`,background:pct===100?"#10b981":pct>=50?"#f59e0b":"#ef4444"}} />
+            </div>
+            {unsubmitted.length>0 && (
+              <div style={{padding:"10px 12px",background:"#fef2f2",borderRadius:8,fontSize:12,color:"#991b1b",display:"flex",alignItems:"center",gap:6}}>
+                <i className="ti ti-alert-triangle" style={{fontSize:14}} />
+                {unsubmitted.length} pending — deadline Tuesday 10:00 AM
+              </div>
+            )}
+            {pct===100&&employees.length>0&&(
+              <div style={{padding:"10px 12px",background:"#ecfdf5",borderRadius:8,fontSize:12,color:"#065f46",display:"flex",alignItems:"center",gap:6}}>
+                <i className="ti ti-circle-check" style={{fontSize:14}} /> All timesheets submitted!
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:0.6,marginBottom:14}}>
+              <i className="ti ti-cake" style={{fontSize:12,marginRight:5}} />UPCOMING BIRTHDAYS (7 DAYS)
+            </p>
+            {birthdays.length===0
+              ? <p style={{fontSize:13,color:"#9ca3af"}}>No birthdays in the next 7 days</p>
+              : birthdays.map(e=>(
+                <div key={e.eid} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #f3f4f6"}}>
+                  <div>
+                    <p style={{margin:0,fontWeight:600,fontSize:14}}>{e.name}</p>
+                    <p style={{margin:0,fontSize:12,color:"#6b7280"}}>{e.department} · {fmtDate(e.birthday)}</p>
+                  </div>
+                  <span className={`badge ${e.days===0?"today":"blue"}`}>{e.days===0?"🎂 Today!":`In ${e.days}d`}</span>
+                </div>
+              ))
+            }
+          </div>
+
+          <div className="card">
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:0.6,marginBottom:14}}>
+              <i className="ti ti-user-x" style={{fontSize:12,marginRight:5}} />THIS WEEK — ABSENCES
+            </p>
+            <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:10}}>
+              <span style={{fontSize:48,fontWeight:700,lineHeight:1,color:totalAbsDays>0?"#b91c1c":"#065f46"}}>{totalAbsDays}</span>
+              <span style={{fontSize:16,color:"#9ca3af"}}>day{totalAbsDays!==1?"s":""} absent</span>
+            </div>
+            {totalAbsDays===0
+              ? <p style={{fontSize:13,color:"#6b7280"}}>No absences logged this week</p>
+              : absences.filter(a=>DAYS.some(d=>a[d]&&a[d]!=="")).map(a=>(
+                <div key={a.eid} style={{padding:"6px 0",borderBottom:"1px solid #f3f4f6",fontSize:13}}>
+                  <span style={{fontWeight:600}}>{a.name}</span>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:4}}>
+                    {DAYS.filter(d=>a[d]&&a[d]!=="").map(d=>(
+                      <span key={d} className="day-pill">{DAY_LABELS[d]}: {a[d]}</span>
+                    ))}
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+
+          <div className="card" style={{gridColumn:"1/-1"}}>
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:0.6,marginBottom:16}}>DEPARTMENT BREAKDOWN</p>
+            <div className="dept-grid">
+              {DEPARTMENTS.map(dept=>{
+                const dEmps = employees.filter(e=>e.department===dept);
+                const dSub  = dEmps.filter(e=>submitted.has(e.eid)).length;
+                const dp    = dEmps.length ? Math.round((dSub/dEmps.length)*100) : 0;
+                const dAbs  = absences.filter(a=>a.department===dept).reduce((s,a)=>s+DAYS.filter(d=>a[d]&&a[d]!=="").length,0);
+                return (
+                  <div key={dept} className="dept-card">
+                    <p style={{margin:"0 0 4px",fontSize:10,color:"#9ca3af",fontWeight:600,letterSpacing:0.5}}>{dept.toUpperCase()}</p>
+                    <p style={{margin:"0 0 10px",fontSize:26,fontWeight:700}}>
+                      {dSub}<span style={{fontSize:14,color:"#9ca3af",fontWeight:400}}>/{dEmps.length}</span>
+                    </p>
+                    <div className="prog-track" style={{marginBottom:8}}>
+                      <div className="prog-fill" style={{width:`${dp}%`,background:dp===100?"#10b981":"#3b82f6"}} />
+                    </div>
+                    {dAbs>0&&<p style={{fontSize:11,color:"#991b1b",margin:0}}><i className="ti ti-user-x" style={{fontSize:10}} /> {dAbs} absent day{dAbs!==1?"s":""}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EMPLOYEES ── */}
+      {tab==="employees" && (
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <p style={{color:"#6b7280",fontSize:13}}>{loading?"Loading...":`${employees.length} employees · ${DEPARTMENTS.length} departments`}</p>
+            <button className="primary" onClick={()=>{setForm({department:DEPARTMENTS[0]});setModal("add");}}>
+              <i className="ti ti-plus" style={{fontSize:14}} /> Add employee
+            </button>
+          </div>
+          {DEPARTMENTS.map(dept=>{
+            const dEmps = employees.filter(e=>e.department===dept);
+            if (!dEmps.length) return null;
+            return (
+              <div key={dept} style={{marginBottom:28}}>
+                <p style={{margin:"0 0 10px",fontSize:11,color:"#6b7280",fontWeight:600,letterSpacing:0.6}}>{dept.toUpperCase()} · {dEmps.length}</p>
+                <div className="emp-grid">
+                  {dEmps.map(emp=>(
+                    <div key={emp.eid} className="emp-card">
+                      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
+                        <div className="avatar">{initials(emp.name)}</div>
+                        <div style={{minWidth:0}}>
+                          <p style={{margin:0,fontWeight:600,fontSize:14,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp.name}</p>
+                          <p style={{margin:0,fontSize:11,color:"#9ca3af",fontFamily:"monospace"}}>EID: {emp.eid}</p>
+                        </div>
+                      </div>
+                      <div style={{fontSize:12,color:"#6b7280",display:"flex",flexDirection:"column",gap:4,marginBottom:12}}>
+                        {emp.jobTitle&&<span><i className="ti ti-briefcase"     style={{fontSize:11,marginRight:4}} />{emp.jobTitle}</span>}
+                        {emp.hireDate&&<span><i className="ti ti-calendar-plus" style={{fontSize:11,marginRight:4}} />Hired {fmtDate(emp.hireDate)}</span>}
+                        {emp.birthday&&<span><i className="ti ti-cake"          style={{fontSize:11,marginRight:4}} />{fmtDate(emp.birthday)}</span>}
+                        {emp.phone   &&<span><i className="ti ti-phone"         style={{fontSize:11,marginRight:4}} />{emp.phone}</span>}
+                        {emp.email   &&<span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}><i className="ti ti-mail" style={{fontSize:11,marginRight:4}} />{emp.email}</span>}
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <button style={{flex:1,fontSize:12}} onClick={()=>{setForm({...emp});setModal("edit");}}>
+                          <i className="ti ti-edit" style={{fontSize:12}} /> Edit
+                        </button>
+                        <button className="danger" style={{fontSize:12}} onClick={()=>deleteEmployee(emp.eid,emp.name)}>
+                          <i className="ti ti-trash" style={{fontSize:13}} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {!loading&&employees.length===0&&(
+            <div style={{textAlign:"center",padding:"4rem",color:"#9ca3af"}}>
+              <i className="ti ti-users" style={{fontSize:48,display:"block",marginBottom:12}} />
+              <p style={{marginBottom:16}}>No employees yet</p>
+              <button className="primary" onClick={()=>{setForm({department:DEPARTMENTS[0]});setModal("add");}}>Add your first employee</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── TIMESHEETS ── */}
+      {tab==="timesheets" && (
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <button onClick={()=>setWeekOff(w=>w-1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-left" /></button>
+              <div>
+                <p style={{margin:0,fontSize:11,color:"#9ca3af"}}>Week ending</p>
+                <p style={{margin:0,fontWeight:600,fontSize:15}}>
+                  {weekEnd.toLocaleDateString("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"})}
+                </p>
+              </div>
+              <button onClick={()=>setWeekOff(w=>w+1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-right" /></button>
+              {weekOff!==0&&<button onClick={()=>setWeekOff(0)}>Current week</button>}
+            </div>
+            <button className="danger" onClick={sendReminder} disabled={sending||unsubmitted.length===0}>
+              <i className="ti ti-mail" style={{fontSize:14}} />
+              {sending?"Sending...":`Send reminder${unsubmitted.length>0?` (${unsubmitted.length})`:""}`}
+            </button>
+          </div>
+
+          <div style={{display:"flex",gap:10,marginBottom:16}}>
+            {[{l:"Submitted",  v:submitted.size,    bg:"#ecfdf5",c:"#065f46"},
+              {l:"Pending",    v:unsubmitted.length, bg:"#fef2f2",c:"#991b1b"},
+              {l:"Absent days",v:totalAbsDays,       bg:"#fffbeb",c:"#92400e"},
+              {l:"Total",      v:employees.length,   bg:"#f3f4f6",c:"#374151"},
+            ].map(({l,v,bg,c})=>(
+              <div key={l} style={{background:bg,borderRadius:10,padding:"8px 16px"}}>
+                <p style={{margin:0,fontSize:11,color:c,fontWeight:600}}>{l}</p>
+                <p style={{margin:0,fontSize:22,fontWeight:700,color:c}}>{v}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="card" style={{padding:0,overflow:"hidden"}}>
+            <div className="ts-header">
+              <span>EMPLOYEE</span><span>EID</span><span>DEPARTMENT</span>
+              <span>SUBMITTED</span><span>ABSENCES</span><span>TIMESTAMP</span>
+            </div>
+            {DEPARTMENTS.flatMap(dept=>employees.filter(e=>e.department===dept)).map((emp,i)=>{
+              const ts      = tsFor(emp.eid);
+              const abs     = absFor(emp.eid);
+              const absDays = DAYS.filter(d=>abs[d]&&abs[d]!=="");
+              return (
+                <div key={emp.eid} className="ts-row">
+                  <span style={{fontWeight:600}}>{emp.name}</span>
+                  <span style={{fontFamily:"monospace",fontSize:11,color:"#9ca3af"}}>{emp.eid}</span>
+                  <span style={{color:"#6b7280",fontSize:12}}>{emp.department}</span>
+
+                  <label style={{display:"flex",alignItems:"center",gap:7,cursor:"pointer"}}>
+                    <input type="checkbox" checked={!!ts.submitted} onChange={e=>saveTs(emp,{submitted:e.target.checked})} />
+                    <span className={`badge ${ts.submitted?"green":"red"}`}>{ts.submitted?"Yes":"No"}</span>
+                  </label>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}}>
+                    {absDays.length===0
+                      ? <button style={{fontSize:11,padding:"3px 8px",color:"#6b7280"}} onClick={()=>openAbsModal(emp)}>
+                          <i className="ti ti-plus" style={{fontSize:11}} /> Log absence
+                        </button>
+                      : <>
+                          {absDays.map(d=>(
+                            <span key={d} className="day-pill" title={abs[d]}>{DAY_LABELS[d]}</span>
+                          ))}
+                          <button style={{fontSize:11,padding:"2px 7px"}} onClick={()=>openAbsModal(emp)}>
+                            <i className="ti ti-edit" style={{fontSize:11}} />
+                          </button>
+                        </>
+                    }
+                  </div>
+                  <span style={{fontSize:11,color:"#9ca3af",fontFamily:"monospace"}}>
+                    {ts.submittedAt ? new Date(ts.submittedAt).toLocaleString("en-US",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"}) : "—"}
+                  </span>
+                </div>
+              );
+            })}
+            {employees.length===0&&(
+              <p style={{padding:"24px 16px",color:"#9ca3af",fontSize:13}}>Add employees first in the Employees tab.</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── EMPLOYEE MODAL ── */}
+      {modal&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setModal(null);}}>
+          <div className="modal">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <h2 style={{fontSize:18,fontWeight:600}}>{modal==="edit"?"Edit employee":"Add employee"}</h2>
+              <button onClick={()=>setModal(null)} style={{border:"none",background:"none",padding:4}}>
+                <i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}} />
+              </button>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              {[{f:"name",l:"Full name *",t:"text",span:2},
+                {f:"eid",l:"Employee ID (EID) *",t:"text"},
+                {f:"jobTitle",l:"Job title",t:"text"},
+                {f:"phone",l:"Phone",t:"tel"},
+                {f:"email",l:"Email",t:"email"},
+                {f:"hireDate",l:"Hire date",t:"date"},
+                {f:"birthday",l:"Birthday",t:"date"},
+              ].map(({f,l,t,span})=>(
+                <div key={f} style={span?{gridColumn:"1/-1"}:{}}>
+                  <label className="field">{l}</label>
+                  <input type={t} value={form[f]||""} onChange={e=>setForm(p=>({...p,[f]:e.target.value}))} />
+                </div>
+              ))}
+              <div style={{gridColumn:"1/-1"}}>
+                <label className="field">Department *</label>
+                <select value={form.department||""} onChange={e=>setForm(p=>({...p,department:e.target.value}))}>
+                  {DEPARTMENTS.map(d=><option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:20}}>
+              <button onClick={()=>setModal(null)}>Cancel</button>
+              <button className="primary" onClick={saveEmployee}>{modal==="edit"?"Save changes":"Add employee"}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── ABSENCE MODAL ── */}
+      {absModal&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setAbsModal(null);}}>
+          <div className="modal">
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <h2 style={{fontSize:18,fontWeight:600}}>Log absences</h2>
+              <button onClick={()=>setAbsModal(null)} style={{border:"none",background:"none",padding:4}}>
+                <i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}} />
+              </button>
+            </div>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}>
+              <strong>{absModal.name}</strong> · {absModal.department}<br/>
+              <span style={{fontSize:12}}>Week of {weekDates[0]} – {weekDates[4]}</span>
+            </p>
+            {DAYS.map((day,i)=>(
+              <div key={day} className="abs-day-row">
+                <input type="checkbox"
+                  checked={!!absForm[day]}
+                  onChange={e=>setAbsForm(p=>({...p,[day]:e.target.checked?REASONS[0]:""}))}
+                />
+                <span style={{fontSize:13,fontWeight:600}}>
+                  {DAY_LABELS[day]}
+                  <span style={{fontWeight:400,color:"#9ca3af",fontSize:11}}> {weekDates[i]}</span>
+                </span>
+                {absForm[day]
+                  ? <select value={absForm[day]} onChange={e=>setAbsForm(p=>({...p,[day]:e.target.value}))}>
+                      {REASONS.map(r=><option key={r} value={r}>{r}</option>)}
+                    </select>
+                  : <span style={{fontSize:12,color:"#d1d5db",fontStyle:"italic"}}>Not absent</span>
+                }
+              </div>
+            ))}
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:24}}>
+              <button onClick={()=>setAbsModal(null)}>Cancel</button>
+              <button className="primary" onClick={saveAbsences}>Save absences</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
