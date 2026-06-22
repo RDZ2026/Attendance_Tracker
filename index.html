@@ -92,8 +92,8 @@
 const {useState,useEffect,useCallback,useRef} = React;
 
 // ── Config — paste your GAS URL here ──────────────────────────────────────
-const GAS_URL = "PASTE_YOUR_GAS_URL_HERE";
-if (GAS_URL && GAS_URL !== "PASTE_YOUR_GAS_URL_HERE" && !localStorage.getItem("wt_gasUrl"))
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec";
+if (GAS_URL && GAS_URL !== "https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec" && !localStorage.getItem("wt_gasUrl"))
   localStorage.setItem("wt_gasUrl", GAS_URL);
 
 // ── Constants ─────────────────────────────────────────────────────────────
