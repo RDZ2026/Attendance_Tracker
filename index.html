@@ -274,7 +274,80 @@ function App(){
 
   const openProfile=async emp=>{setProfileEmp(emp);setProfileAbs([]);setProfileTerm(null);setProfileLoad(true);const[a,t]=await Promise.all([call({action:"getAllAbsences",eid:emp.eid}),call({action:"getTermination",eid:emp.eid})]);if(a?.absences)setProfileAbs(a.absences);if(t?.termination)setProfileTerm(t.termination);setProfileLoad(false);};
 
-  const approvePending=async(id)=>{const res=await call({action:"approvePendingReport",id});if(res?.success){notify("Approved");loadPending();loadAbsences();}else notify("Failed","error");};
+  const approvePending=async(p)=>{
+    // Step 1 — figure out weekEnd and day name from absDate
+    const absDateStr = p.absDate || "";
+    if (!absDateStr) { notify("No date on this request — edit it first","error"); return; }
+
+    const parts    = absDateStr.split("-");
+    const absDate  = new Date(+parts[0], +parts[1]-1, +parts[2]);
+    const dayIndex = absDate.getDay(); // 0=Sun,1=Mon...6=Sat
+    const dayNames = ["sunday","monday","tuesday","wednesday","thursday","friday","saturday"];
+    const dayName  = dayNames[dayIndex];
+    const validDays= ["monday","tuesday","wednesday","thursday","friday"];
+
+    if (!validDays.includes(dayName)) {
+      notify("Absence date falls on a weekend — edit the date first","error"); return;
+    }
+
+    // Calculate Saturday weekEnd for that date
+    const daysUntilSat = (6 - dayIndex + 7) % 7;
+    const sat = new Date(absDate);
+    sat.setDate(absDate.getDate() + daysUntilSat);
+    const weekEnd = sat.toISOString().split("T")[0];
+
+    // Step 2 — find employee EID from local employees list
+    const emp = employees.find(e => e.name === p.name && e.department === p.department);
+    const eid = emp ? emp.eid : p.name;
+
+    // Step 3 — build absence data object
+    const absData = {
+      weekEnd, eid, name: p.name, department: p.department,
+      loggedAt: new Date().toISOString(),
+    };
+    ["monday","tuesday","wednesday","thursday","friday"].forEach(d => {
+      absData[`${d}_absent`]     = "";
+      absData[`${d}_lateReason`] = "";
+      absData[`${d}_lateHours`]  = "";
+    });
+
+    // Apply the correct day
+    const attType   = p.attType || "";
+    const hoursLost = String(p.hoursLost || "");
+    const reason    = p.reason || "";
+
+    if (attType === "Absent - Full Day") {
+      absData[`${dayName}_absent`] = reason || "Absent";
+    } else {
+      absData[`${dayName}_lateReason`] = attType;
+      absData[`${dayName}_lateHours`]  = hoursLost || "1";
+    }
+
+    // Step 4 — check if an absence row already exists for this employee+week and merge
+    const existing = absences.find(a => a.eid === String(eid) && a.weekEnd === weekEnd);
+    if (existing) {
+      // Merge — only overwrite the specific day, keep others
+      const merged = { ...existing, ...absData };
+      // But preserve existing days we didn't touch
+      ["monday","tuesday","wednesday","thursday","friday"].forEach(d => {
+        if (d !== dayName) {
+          merged[`${d}_absent`]     = existing[`${d}_absent`]     || "";
+          merged[`${d}_lateReason`] = existing[`${d}_lateReason`] || "";
+          merged[`${d}_lateHours`]  = existing[`${d}_lateHours`]  || "";
+        }
+      });
+      await call({ action: "saveAbsences", data: merged });
+    } else {
+      await call({ action: "saveAbsences", data: absData });
+    }
+
+    // Step 5 — mark as approved in PendingReports
+    await call({ action: "approvePendingReport", id: p.id });
+
+    notify(`${p.name} — attendance logged and approved`);
+    loadPending();
+    loadAbsences();
+  };
   const rejectPending =async(id)=>{const res=await call({action:"rejectPendingReport",id});if(res?.success){notify("Rejected");loadPending();}else notify("Failed","error");};
 
   const changePassword=async()=>{
@@ -567,7 +640,7 @@ function App(){
                   <span>{p.isTemp==="Temp"?<span className="badge gray">Temp</span>:<span className={`badge ${p.workday==="Yes"?"green":"red"}`}>{p.workday}</span>}</span>
                   <div style={{display:"flex",gap:4}}>
                     <button style={{fontSize:11,padding:"4px 8px",color:"#1d4ed8",borderColor:"#93c5fd"}} onClick={()=>{setEditForm({...p});setEditPending(p);}}>✏</button>
-                    <button className="success" style={{fontSize:11,padding:"4px 8px"}} onClick={()=>approvePending(p.id)}>✓</button>
+                    <button className="success" style={{fontSize:11,padding:"4px 8px"}} onClick={()=>approvePending(p)}>✓</button>
                     <button className="danger"  style={{fontSize:11,padding:"4px 8px"}} onClick={()=>rejectPending(p.id)}>✕</button>
                   </div>
                 </div>
