@@ -3,40 +3,42 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Workforce Tracker</title>
+  <title>nVent Workforce Tracker</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css"/>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f5f7;color:#1a1a2e;min-height:100vh;}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f4f4f4;color:#1a1a2e;min-height:100vh;}
     #root{max-width:1280px;margin:0 auto;padding:0 20px 40px;}
 
     button{font-family:inherit;font-size:13px;padding:7px 14px;border:1px solid #d0d5dd;background:#fff;color:#344054;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:background .15s,border-color .15s;}
     button:hover{background:#f9fafb;border-color:#b0b7c3;}
     button:disabled{opacity:.5;cursor:not-allowed;}
-    button.primary{background:#1d4ed8;color:#fff;border-color:#1d4ed8;}
-    button.primary:hover{background:#1e40af;}
+    button.primary{background:#E2001A;color:#fff;border-color:#E2001A;}
+    button.primary:hover{background:#b8001a;}
+    button.dark{background:#404040;color:#fff;border-color:#404040;}
+    button.dark:hover{background:#555;}
     button.danger{color:#b91c1c;border-color:#fca5a5;}
     button.danger:hover{background:#fef2f2;}
     button.amber{color:#92400e;border-color:#fde68a;background:#fffbeb;}
-    button.amber:hover{background:#fef3c7;}
     button.success{color:#065f46;border-color:#6ee7b7;background:#ecfdf5;}
 
     input,select{font-family:inherit;font-size:13px;padding:8px 12px;border:1px solid #d0d5dd;border-radius:8px;color:#1a1a2e;background:#fff;width:100%;outline:none;transition:border-color .15s;}
-    input:focus,select:focus{border-color:#1d4ed8;box-shadow:0 0 0 3px rgba(29,78,216,.1);}
-    input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#1d4ed8;}
+    input:focus,select:focus{border-color:#E2001A;box-shadow:0 0 0 3px rgba(226,0,26,.1);}
+    input[type="checkbox"]{width:16px;height:16px;cursor:pointer;accent-color:#E2001A;}
     input[type="number"]{width:80px;}
     input[type="password"]{letter-spacing:2px;}
 
     .card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:20px;}
-    .nav{display:flex;align-items:center;gap:4px;border-bottom:1px solid #e5e7eb;margin-bottom:24px;padding-top:20px;}
-    .nav-btn{border:none;border-radius:8px 8px 0 0;border-bottom:2px solid transparent;padding:10px 16px;font-size:14px;background:transparent;margin-bottom:-1px;}
-    .nav-btn.active{border-bottom:2px solid #1d4ed8;color:#1d4ed8;font-weight:500;}
+    .nav{display:flex;align-items:center;gap:4px;border-bottom:2px solid #E2001A;margin-bottom:24px;padding-top:20px;}
+    .nav-btn{border:none;border-radius:8px 8px 0 0;border-bottom:3px solid transparent;padding:10px 16px;font-size:14px;background:transparent;margin-bottom:-2px;}
+    .nav-btn.active{border-bottom:3px solid #E2001A;color:#E2001A;font-weight:600;}
 
-    .ts-header{display:grid;grid-template-columns:1.8fr 0.8fr 1fr 100px 190px 200px;gap:8px;padding:10px 16px;font-size:11px;color:#6b7280;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #e5e7eb;}
-    .ts-row{display:grid;grid-template-columns:1.8fr 0.8fr 1fr 100px 190px 200px;gap:8px;padding:10px 16px;align-items:center;font-size:13px;}
+    .ts-header{display:grid;grid-template-columns:1.8fr 0.8fr 1fr 100px 200px 200px;gap:8px;padding:10px 16px;font-size:11px;color:#6b7280;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #e5e7eb;}
+    .ts-row{display:grid;grid-template-columns:1.8fr 0.8fr 1fr 100px 200px 200px;gap:8px;padding:10px 16px;align-items:center;font-size:13px;}
     .ts-row:nth-child(even){background:#f9fafb;}
 
     .toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:0 4px 20px rgba(0,0,0,.12);}
@@ -44,7 +46,8 @@
     .toast.error{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5;}
 
     .overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
-    .modal{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal{background:#fff;border-radius:14px;padding:28px;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal-wide{max-width:700px;}
 
     .badge{font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap;}
     .badge.green{background:#ecfdf5;color:#065f46;}
@@ -53,20 +56,20 @@
     .badge.amber{background:#fffbeb;color:#92400e;}
     .badge.today{background:#fef3c7;color:#92400e;}
     .badge.gray{background:#f3f4f6;color:#6b7280;}
+    .badge.nvent{background:#E2001A;color:#fff;}
 
     .prog-track{height:5px;background:#e5e7eb;border-radius:3px;overflow:hidden;}
     .prog-fill{height:5px;border-radius:3px;transition:width .5s ease;}
 
     .emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;}
     .emp-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:16px;cursor:pointer;transition:box-shadow .15s,border-color .15s;}
-    .emp-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08);border-color:#93c5fd;}
+    .emp-card:hover{box-shadow:0 4px 16px rgba(226,0,26,.1);border-color:#E2001A;}
     .emp-card.inactive{opacity:.6;}
     .dept-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
-    .dept-card{background:#f9fafb;border-radius:10px;padding:14px;}
-    .avatar{width:38px;height:38px;border-radius:50%;background:#dbeafe;color:#1d4ed8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+    .dept-card{background:#f9fafb;border-radius:10px;padding:14px;border-left:3px solid #E2001A;}
+    .avatar{width:38px;height:38px;border-radius:50%;background:#fff0f0;color:#E2001A;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;border:2px solid #fecaca;}
 
     .setup{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80vh;text-align:center;gap:14px;}
-    .setup-icon{width:60px;height:60px;border-radius:16px;background:#dbeafe;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
     label.field{display:block;font-size:12px;color:#6b7280;margin-bottom:5px;font-weight:500;text-align:left;}
 
     .att-section{border-radius:10px;padding:14px;margin-bottom:14px;}
@@ -84,6 +87,20 @@
     .divider{display:flex;align-items:center;gap:12px;margin:28px 0 16px;}
     .divider-line{flex:1;height:1px;background:#e5e7eb;}
     .divider-label{font-size:11px;color:#9ca3af;font-weight:600;letter-spacing:.6px;white-space:nowrap;}
+
+    .pending-row{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:10px 16px;align-items:center;font-size:13px;}
+    .pending-row:nth-child(even){background:#f9fafb;}
+    .pending-header{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr 1fr auto;gap:8px;padding:10px 16px;font-size:11px;color:#6b7280;font-weight:600;letter-spacing:.5px;border-bottom:1px solid #e5e7eb;}
+
+    .report-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+    .stat-big{font-size:42px;font-weight:700;line-height:1;}
+    .chart-wrap{position:relative;height:220px;}
+
+    .nvent-header{background:#404040;padding:16px 20px;display:flex;align-items:center;gap:16px;border-radius:12px;margin-bottom:0;}
+    .nvent-logo{height:36px;object-fit:contain;filter:brightness(0) invert(1);}
+    .nvent-divider{width:1px;height:36px;background:rgba(255,255,255,.2);}
+    .nvent-title{color:#fff;font-size:15px;font-weight:600;}
+    .nvent-sub{color:rgba(255,255,255,.6);font-size:11px;margin-top:2px;}
   </style>
 </head>
 <body>
@@ -91,12 +108,12 @@
 <script type="text/babel">
 const {useState,useEffect,useCallback,useRef} = React;
 
-// ── Config — paste your GAS URL here ──────────────────────────────────────
-const GAS_URL = "https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec";
-if (GAS_URL && GAS_URL !== "https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec" && !localStorage.getItem("wt_gasUrl"))
+const GAS_URL      = "https://script.google.com/macros/s/AKfycbwAzIiqrfGhmpWFcFn3GOng8u6AEHj4K9EO__KdqiVlIOoN3Np83KHwDJt0u0frFrMIAA/exec";
+const NVENT_LOGO   = "data:image/png;base64,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";
+
+if (GAS_URL && GAS_URL !== "PASTE_YOUR_GAS_URL_HERE" && !localStorage.getItem("wt_gasUrl"))
   localStorage.setItem("wt_gasUrl", GAS_URL);
 
-// ── Constants ─────────────────────────────────────────────────────────────
 const DEPARTMENTS  = ["Molding","VJ Assembly","CNC","Gasket","Paint"];
 const DAYS         = ["monday","tuesday","wednesday","thursday","friday"];
 const DAY_LABELS   = {monday:"Mon",tuesday:"Tue",wednesday:"Wed",thursday:"Thu",friday:"Fri"};
@@ -105,189 +122,136 @@ const LATE_REASONS = ["Late Arrival","Left Early","Late Arrival & Left Early"];
 const TERM_REASONS = ["Resigned","Terminated","Contract Ended","Retired","Other"];
 const SHIFT_HOURS  = 8;
 const SESSION_KEY  = "wt_session";
-const TIMEOUT_MS   = 8 * 60 * 60 * 1000;
+const TIMEOUT_MS   = 8*60*60*1000;
 
-// ── Session helpers ───────────────────────────────────────────────────────
-function getSession() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
-    if (!s) return null;
-    if (Date.now() - s.lastActivity > TIMEOUT_MS) { localStorage.removeItem(SESSION_KEY); return null; }
-    return s;
-  } catch { return null; }
-}
-function saveSession(data) { localStorage.setItem(SESSION_KEY, JSON.stringify({...data, lastActivity:Date.now()})); }
-function touchSession()    { const s=getSession(); if(s) saveSession(s); }
+function getSession(){try{const s=JSON.parse(localStorage.getItem(SESSION_KEY));if(!s)return null;if(Date.now()-s.lastActivity>TIMEOUT_MS){localStorage.removeItem(SESSION_KEY);return null;}return s;}catch{return null;}}
+function saveSession(d){localStorage.setItem(SESSION_KEY,JSON.stringify({...d,lastActivity:Date.now()}));}
+function touchSession(){const s=getSession();if(s)saveSession(s);}
+function getWeekEnd(o=0){const d=new Date(),s=new Date(d);s.setDate(d.getDate()+(6-d.getDay())+o*7);s.setHours(0,0,0,0);return s;}
+function getWeekDates(sat){return DAYS.map((_,i)=>{const d=new Date(sat);d.setDate(sat.getDate()-5+i);return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"});});}
+function fmtDate(iso){if(!iso)return"—";const p=String(iso).split("-");return p.length<3?(iso||"—"):`${p[1]}/${p[2]}/${p[0]}`;}
+function daysUntilBirthday(b){if(!b)return null;const t=new Date();t.setHours(0,0,0,0);const p=String(b).split("-");if(p.length<3)return null;const n=new Date(t.getFullYear(),+p[1]-1,+p[2]);if(n<t)n.setFullYear(t.getFullYear()+1);return Math.round((n-t)/86400000);}
+function initials(n=""){return n.trim().split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase();}
+function calcHoursLost(abs){let h=0;DAYS.forEach(d=>{if(abs[`${d}_absent`]&&abs[`${d}_absent`]!=="")h+=SHIFT_HOURS;const lh=parseFloat(abs[`${d}_lateHours`]);if(!isNaN(lh)&&lh>0&&lh<=SHIFT_HOURS)h+=lh;});return Math.round(h*10)/10;}
+function calcCoverage(covs){const o={},i={};DEPARTMENTS.forEach(d=>{o[d]=0;i[d]=0;});covs.forEach(c=>{DAYS.forEach(day=>{const td=c[`${day}_toDept`];const h=parseFloat(c[`${day}_hours`]);if(td&&!isNaN(h)&&h>0&&h<=SHIFT_HOURS){if(o[c.fromDept]!==undefined)o[c.fromDept]+=h;if(i[td]!==undefined)i[td]+=h;}});});return{out:o,inp:i};}
 
-// ── Helpers ───────────────────────────────────────────────────────────────
-function getWeekEnd(offset=0) {
-  const d=new Date(), sat=new Date(d);
-  sat.setDate(d.getDate()+(6-d.getDay())+offset*7);
-  sat.setHours(0,0,0,0); return sat;
-}
-function getWeekDates(sat) {
-  return DAYS.map((_,i)=>{ const d=new Date(sat); d.setDate(sat.getDate()-5+i); return d.toLocaleDateString("en-US",{month:"numeric",day:"numeric"}); });
-}
-function fmtDate(iso) {
-  if (!iso) return "—"; const p=String(iso).split("-"); return p.length<3?(iso||"—"):`${p[1]}/${p[2]}/${p[0]}`;
-}
-function daysUntilBirthday(bday) {
-  if(!bday) return null;
-  const today=new Date(); today.setHours(0,0,0,0);
-  const p=String(bday).split("-"); if(p.length<3) return null;
-  const next=new Date(today.getFullYear(),+p[1]-1,+p[2]);
-  if(next<today) next.setFullYear(today.getFullYear()+1);
-  return Math.round((next-today)/86400000);
-}
-function initials(name="") { return name.trim().split(/\s+/).map(w=>w[0]||"").join("").slice(0,2).toUpperCase(); }
-function calcHoursLost(abs) {
-  let h=0;
-  DAYS.forEach(d=>{
-    if(abs[`${d}_absent`]&&abs[`${d}_absent`]!=="") h+=SHIFT_HOURS;
-    const lh=parseFloat(abs[`${d}_lateHours`]);
-    if(!isNaN(lh)&&lh>0&&lh<=SHIFT_HOURS) h+=lh;
-  });
-  return Math.round(h*10)/10;
-}
-function calcCoverage(coverages) {
-  const out={},inp={};
-  DEPARTMENTS.forEach(d=>{out[d]=0;inp[d]=0;});
-  coverages.forEach(c=>{
-    DAYS.forEach(day=>{
-      const toDept=c[`${day}_toDept`];
-      const h=parseFloat(c[`${day}_hours`]);
-      if(toDept&&!isNaN(h)&&h>0&&h<=SHIFT_HOURS){
-        if(out[c.fromDept]!==undefined) out[c.fromDept]+=h;
-        if(inp[toDept]!==undefined) inp[toDept]+=h;
-      }
+function BarChart({data, labels, color="#E2001A", title}){
+  const ref = useRef();
+  const chartRef = useRef();
+  useEffect(()=>{
+    if(!ref.current) return;
+    if(chartRef.current) chartRef.current.destroy();
+    chartRef.current = new Chart(ref.current,{
+      type:"bar",
+      data:{labels,datasets:[{data,backgroundColor:color+"99",borderColor:color,borderWidth:2,borderRadius:6}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},title:{display:!!title,text:title,font:{size:13}}},scales:{y:{beginAtZero:true,grid:{color:"#f3f4f6"}},x:{grid:{display:false}}}}
     });
-  });
-  return {out,inp};
+    return()=>{if(chartRef.current)chartRef.current.destroy();};
+  },[data,labels,color,title]);
+  return <canvas ref={ref}/>;
 }
 
-// ── App ───────────────────────────────────────────────────────────────────
-function App() {
-  // Auth
-  const [session,      setSessionSt]   = useState(()=>getSession());
-  const [loginForm,    setLoginForm]   = useState({username:"",password:""});
-  const [loginError,   setLoginError]  = useState("");
-  const [loginLoading, setLoginLoad]   = useState(false);
-  const [timedOut,     setTimedOut]    = useState(false);
-
-  // Setup
-  const [urlDraft,  setUrlDraft]  = useState("");
-  const [setupDone, setSetupDone] = useState(!!localStorage.getItem("wt_gasUrl"));
-
-  // Data
-  const [tab,       setTab]       = useState("dashboard");
-  const [employees, setEmployees] = useState([]);
-  const [timesheets,setTimesheets]= useState([]);
-  const [absences,  setAbsences]  = useState([]);
-  const [coverages, setCoverages] = useState([]);
-  const [weekOff,   setWeekOff]   = useState(0);
-  const [loading,   setLoading]   = useState(false);
-  const [toast,     setToast]     = useState(null);
-  const [sending,   setSending]   = useState(false);
-
-  // Modals
-  const [modal,          setModal]          = useState(null);
-  const [form,           setForm]           = useState({});
-  const [absModal,       setAbsModal]       = useState(null);
-  const [absForm,        setAbsForm]        = useState({});
-  const [termModal,      setTermModal]      = useState(null);
-  const [termForm,       setTermForm]       = useState({});
-  const [covModal,       setCovModal]       = useState(null);
-  const [covForm,        setCovForm]        = useState({});
-  const [profileEmp,     setProfileEmp]     = useState(null);
-  const [profileAbs,     setProfileAbs]     = useState([]);
-  const [profileTermData,setProfileTermData]= useState(null);
-  const [profileLoad,    setProfileLoad]    = useState(false);
-
+function App(){
+  const [session,setSessionSt]     = useState(()=>getSession());
+  const [loginForm,setLoginForm]   = useState({username:"",password:""});
+  const [loginError,setLoginError] = useState("");
+  const [loginLoad,setLoginLoad]   = useState(false);
+  const [timedOut,setTimedOut]     = useState(false);
+  const [setupDone,setSetupDone]   = useState(!!localStorage.getItem("wt_gasUrl"));
+  const [urlDraft,setUrlDraft]     = useState("");
+  const [tab,setTab]               = useState("dashboard");
+  const [employees,setEmployees]   = useState([]);
+  const [timesheets,setTimesheets] = useState([]);
+  const [absences,setAbsences]     = useState([]);
+  const [coverages,setCoverages]   = useState([]);
+  const [pending,setPending]       = useState([]);
+  const [weekOff,setWeekOff]       = useState(0);
+  const [loading,setLoading]       = useState(false);
+  const [toast,setToast]           = useState(null);
+  const [sending,setSending]       = useState(false);
+  const [modal,setModal]           = useState(null);
+  const [form,setForm]             = useState({});
+  const [absModal,setAbsModal]     = useState(null);
+  const [absForm,setAbsForm]       = useState({});
+  const [termModal,setTermModal]   = useState(null);
+  const [termForm,setTermForm]     = useState({});
+  const [covModal,setCovModal]     = useState(null);
+  const [covForm,setCovForm]       = useState({});
+  const [profileEmp,setProfileEmp] = useState(null);
+  const [profileAbs,setProfileAbs] = useState([]);
+  const [profileTerm,setProfileTerm]= useState(null);
+  const [profileLoad,setProfileLoad]= useState(false);
+  const [pwModal,setPwModal]       = useState(false);
+  const [pwForm,setPwForm]         = useState({current:"",newPw:"",confirm:""});
+  const [pwError,setPwError]       = useState("");
+  const [reportRange,setReportRange]= useState("month");
+  const [allAbsData,setAllAbsData] = useState([]);
+  const [allAbsLoad,setAllAbsLoad] = useState(false);
   const toastTimer = useRef(null);
+
   const weekEnd    = getWeekEnd(weekOff);
   const weekEndStr = weekEnd.toISOString().split("T")[0];
   const weekDates  = getWeekDates(weekEnd);
-  const isAdmin    = session?.role === "Admin";
+  const isAdmin    = session?.role==="Admin";
 
-  // Inactivity timeout
   useEffect(()=>{
-    if(!session) return;
-    const touch = ()=>touchSession();
-    document.addEventListener("click",touch);
-    document.addEventListener("keydown",touch);
-    const iv = setInterval(()=>{ if(!getSession()){ localStorage.removeItem(SESSION_KEY); setSessionSt(null); setTimedOut(true); }}, 60000);
-    return ()=>{ document.removeEventListener("click",touch); document.removeEventListener("keydown",touch); clearInterval(iv); };
+    if(!session)return;
+    const touch=()=>touchSession();
+    document.addEventListener("click",touch);document.addEventListener("keydown",touch);
+    const iv=setInterval(()=>{if(!getSession()){localStorage.removeItem(SESSION_KEY);setSessionSt(null);setTimedOut(true);}},60000);
+    return()=>{document.removeEventListener("click",touch);document.removeEventListener("keydown",touch);clearInterval(iv);};
   },[session]);
 
-  const notify=(msg,type="success")=>{
-    clearTimeout(toastTimer.current);
-    setToast({msg,type});
-    toastTimer.current=setTimeout(()=>setToast(null),3500);
-  };
+  const notify=(msg,type="success")=>{clearTimeout(toastTimer.current);setToast({msg,type});toastTimer.current=setTimeout(()=>setToast(null),3500);};
 
   const call=useCallback(async(params)=>{
-    const url=localStorage.getItem("wt_gasUrl");
-    if(!url) return null;
-    try {
-      const u=new URL(url);
-      Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==="object"?JSON.stringify(v):String(v)));
-      const res=await fetch(u.toString(),{redirect:"follow"});
-      if(!res.ok) throw new Error("HTTP "+res.status);
-      return await res.json();
-    } catch(e){ notify("Connection error: "+e.message,"error"); return null; }
+    const url=localStorage.getItem("wt_gasUrl");if(!url)return null;
+    try{const u=new URL(url);Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,typeof v==="object"?JSON.stringify(v):String(v)));
+    const res=await fetch(u.toString(),{redirect:"follow"});if(!res.ok)throw new Error("HTTP "+res.status);return await res.json();}
+    catch(e){notify("Connection error: "+e.message,"error");return null;}
   },[]);
 
-  // Auth actions
   const doLogin=async()=>{
     if(!loginForm.username||!loginForm.password){setLoginError("Enter username and password");return;}
-    setLoginLoad(true); setLoginError("");
+    setLoginLoad(true);setLoginError("");
     const res=await call({action:"verifyLogin",username:loginForm.username,password:loginForm.password});
     setLoginLoad(false);
-    if(res?.success){
-      const s={username:res.username,role:res.role,lastActivity:Date.now()};
-      saveSession(s); setSessionSt(s); setTimedOut(false);
-    } else setLoginError(res?.error||"Invalid username or password");
+    if(res?.success){const s={username:res.username,role:res.role,lastActivity:Date.now()};saveSession(s);setSessionSt(s);setTimedOut(false);}
+    else setLoginError(res?.error||"Invalid username or password");
   };
-  const logout=()=>{ localStorage.removeItem(SESSION_KEY); setSessionSt(null); setTimedOut(false); };
+  const logout=()=>{localStorage.removeItem(SESSION_KEY);setSessionSt(null);setTimedOut(false);};
 
-  // Data loaders
-  const loadEmployees =useCallback(async()=>{ setLoading(true); const d=await call({action:"getEmployees"}); if(d?.employees) setEmployees(d.employees); setLoading(false); },[call]);
-  const loadTimesheets=useCallback(async()=>{ const d=await call({action:"getTimesheets",weekEnd:weekEndStr}); if(d?.timesheets) setTimesheets(d.timesheets); },[call,weekEndStr]);
-  const loadAbsences  =useCallback(async()=>{ const d=await call({action:"getAbsences",weekEnd:weekEndStr}); if(d?.absences) setAbsences(d.absences); },[call,weekEndStr]);
-  const loadCoverages =useCallback(async()=>{ const d=await call({action:"getCoverage",weekEnd:weekEndStr}); if(d?.coverages) setCoverages(d.coverages); },[call,weekEndStr]);
+  const loadEmployees =useCallback(async()=>{setLoading(true);const d=await call({action:"getEmployees"});if(d?.employees)setEmployees(d.employees);setLoading(false);},[call]);
+  const loadTimesheets=useCallback(async()=>{const d=await call({action:"getTimesheets",weekEnd:weekEndStr});if(d?.timesheets)setTimesheets(d.timesheets);},[call,weekEndStr]);
+  const loadAbsences  =useCallback(async()=>{const d=await call({action:"getAbsences",weekEnd:weekEndStr});if(d?.absences)setAbsences(d.absences);},[call,weekEndStr]);
+  const loadCoverages =useCallback(async()=>{const d=await call({action:"getCoverage",weekEnd:weekEndStr});if(d?.coverages)setCoverages(d.coverages);},[call,weekEndStr]);
+  const loadPending   =useCallback(async()=>{const d=await call({action:"getPendingReports"});if(d?.reports)setPending(d.reports);},[call]);
 
-  useEffect(()=>{ if(session&&setupDone) loadEmployees(); },[session,setupDone]);
-  useEffect(()=>{ if(session&&setupDone){ loadTimesheets(); loadAbsences(); loadCoverages(); } },[session,setupDone,weekEndStr]);
+  useEffect(()=>{if(session&&setupDone)loadEmployees();},[session,setupDone]);
+  useEffect(()=>{if(session&&setupDone){loadTimesheets();loadAbsences();loadCoverages();loadPending();}},[session,setupDone,weekEndStr]);
 
-  // Employee actions
+  useEffect(()=>{
+    if(tab==="reports"&&allAbsData.length===0&&!allAbsLoad){
+      setAllAbsLoad(true);
+      call({action:"getAllAbsencesAll"}).then(d=>{if(d?.absences)setAllAbsData(d.absences);setAllAbsLoad(false);});
+    }
+  },[tab]);
+
   const saveEmployee=async()=>{
     if(!form.name||!form.eid||!form.department){notify("Name, EID, Department required","error");return;}
     const res=await call({action:modal==="edit"?"updateEmployee":"addEmployee",data:{...form,status:form.status||"Active"}});
     if(res?.success){notify(modal==="edit"?"Employee updated":"Employee added");setModal(null);loadEmployees();}
     else notify(res?.error||"Save failed","error");
   };
-  const deleteEmployee=async(eid,name)=>{
-    if(!confirm(`Remove ${name}?`)) return;
-    const res=await call({action:"deleteEmployee",eid});
-    if(res?.success){notify("Employee removed");loadEmployees();}
-  };
-  const openTerminate=emp=>{
-    setTermModal(emp);
-    setTermForm({lastDay:new Date().toISOString().split("T")[0],reason:"Resigned",rehireEligible:"Yes",notes:""});
-  };
+  const deleteEmployee=async(eid,name)=>{if(!confirm(`Remove ${name}?`))return;const res=await call({action:"deleteEmployee",eid});if(res?.success){notify("Employee removed");loadEmployees();}};
+  const openTerminate=emp=>{setTermModal(emp);setTermForm({lastDay:new Date().toISOString().split("T")[0],reason:"Resigned",rehireEligible:"Yes",notes:""}); };
   const saveTerminate=async()=>{
-    if(!termForm.lastDay){notify("Last day is required","error");return;}
+    if(!termForm.lastDay){notify("Last day required","error");return;}
     const res=await call({action:"terminateEmployee",data:{eid:termModal.eid,name:termModal.name,department:termModal.department,...termForm,terminatedAt:new Date().toISOString()}});
-    if(res?.success){notify(`${termModal.name} marked inactive`);setTermModal(null);loadEmployees();}
-    else notify("Failed","error");
+    if(res?.success){notify(`${termModal.name} marked inactive`);setTermModal(null);loadEmployees();}else notify("Failed","error");
   };
-  const reactivate=async(eid,name)=>{
-    if(!confirm(`Reactivate ${name}?`)) return;
-    const res=await call({action:"reactivateEmployee",eid});
-    if(res?.success){notify(`${name} reactivated`);loadEmployees();}
-  };
+  const reactivate=async(eid,name)=>{if(!confirm(`Reactivate ${name}?`))return;const res=await call({action:"reactivateEmployee",eid});if(res?.success){notify(`${name} reactivated`);loadEmployees();}};
 
-  // Timesheet
   const tsFor =eid=>timesheets.find(t=>t.eid===eid)||{};
   const absFor=eid=>absences.find(a=>a.eid===eid)||{};
   const covFor=eid=>coverages.find(c=>c.fromEid===eid)||{};
@@ -295,119 +259,143 @@ function App() {
   const saveTs=async(emp,patch)=>{
     const cur=tsFor(emp.eid);
     const data={weekEnd:weekEndStr,eid:emp.eid,name:emp.name,department:emp.department,submitted:cur.submitted??false,submittedAt:cur.submittedAt??"",...patch};
-    if(patch.submitted===true&&!cur.submitted) data.submittedAt=new Date().toISOString();
-    if(patch.submitted===false) data.submittedAt="";
-    const res=await call({action:"submitTimesheet",data});
-    if(res?.success) loadTimesheets(); else notify("Save failed","error");
+    if(patch.submitted===true&&!cur.submitted)data.submittedAt=new Date().toISOString();
+    if(patch.submitted===false)data.submittedAt="";
+    const res=await call({action:"submitTimesheet",data});if(res?.success)loadTimesheets();else notify("Save failed","error");
   };
 
-  // Absence modal
-  const openAbsModal=emp=>{
-    const cur=absFor(emp.eid); const f={};
-    DAYS.forEach(d=>{ f[`${d}_absent`]=cur[`${d}_absent`]||""; f[`${d}_lateReason`]=cur[`${d}_lateReason`]||""; f[`${d}_lateHours`]=cur[`${d}_lateHours`]||""; });
-    setAbsForm(f); setAbsModal(emp);
-  };
-  const saveAbsences=async()=>{
-    const res=await call({action:"saveAbsences",data:{weekEnd:weekEndStr,eid:absModal.eid,name:absModal.name,department:absModal.department,loggedAt:new Date().toISOString(),...absForm}});
-    if(res?.success){notify("Attendance logged");setAbsModal(null);loadAbsences();} else notify("Save failed","error");
+  const openAbsModal=emp=>{const cur=absFor(emp.eid);const f={};DAYS.forEach(d=>{f[`${d}_absent`]=cur[`${d}_absent`]||"";f[`${d}_lateReason`]=cur[`${d}_lateReason`]||"";f[`${d}_lateHours`]=cur[`${d}_lateHours`]||"";});setAbsForm(f);setAbsModal(emp);};
+  const saveAbsences=async()=>{const res=await call({action:"saveAbsences",data:{weekEnd:weekEndStr,eid:absModal.eid,name:absModal.name,department:absModal.department,loggedAt:new Date().toISOString(),...absForm}});if(res?.success){notify("Attendance logged");setAbsModal(null);loadAbsences();}else notify("Save failed","error");};
+
+  const openCovModal=emp=>{const cur=covFor(emp.eid);const f={};DAYS.forEach(d=>{f[`${d}_toDept`]=cur[`${d}_toDept`]||"";f[`${d}_hours`]=cur[`${d}_hours`]||"";});setCovForm(f);setCovModal(emp);};
+  const saveCoverage=async()=>{const res=await call({action:"saveCoverage",data:{weekEnd:weekEndStr,fromEid:covModal.eid,fromName:covModal.name,fromDept:covModal.department,loggedAt:new Date().toISOString(),...covForm}});if(res?.success){notify("Coverage logged");setCovModal(null);loadCoverages();}else notify("Save failed","error");};
+
+  const openProfile=async emp=>{setProfileEmp(emp);setProfileAbs([]);setProfileTerm(null);setProfileLoad(true);const[a,t]=await Promise.all([call({action:"getAllAbsences",eid:emp.eid}),call({action:"getTermination",eid:emp.eid})]);if(a?.absences)setProfileAbs(a.absences);if(t?.termination)setProfileTerm(t.termination);setProfileLoad(false);};
+
+  const approvePending=async(id)=>{const res=await call({action:"approvePendingReport",id});if(res?.success){notify("Approved");loadPending();loadAbsences();}else notify("Failed","error");};
+  const rejectPending =async(id)=>{const res=await call({action:"rejectPendingReport",id});if(res?.success){notify("Rejected");loadPending();}else notify("Failed","error");};
+
+  const changePassword=async()=>{
+    if(!pwForm.current||!pwForm.newPw){setPwError("Fill all fields");return;}
+    if(pwForm.newPw!==pwForm.confirm){setPwError("Passwords do not match");return;}
+    if(pwForm.newPw.length<4){setPwError("Password must be at least 4 characters");return;}
+    const res=await call({action:"changePassword",username:session.username,currentPassword:pwForm.current,newPassword:pwForm.newPw});
+    if(res?.success){notify("Password changed");setPwModal(false);setPwForm({current:"",newPw:"",confirm:""});setPwError("");}
+    else setPwError(res?.error||"Failed — check your current password");
   };
 
-  // Coverage modal
-  const openCovModal=emp=>{
-    const cur=covFor(emp.eid); const f={};
-    DAYS.forEach(d=>{ f[`${d}_toDept`]=cur[`${d}_toDept`]||""; f[`${d}_hours`]=cur[`${d}_hours`]||""; });
-    setCovForm(f); setCovModal(emp);
-  };
-  const saveCoverage=async()=>{
-    const res=await call({action:"saveCoverage",data:{weekEnd:weekEndStr,fromEid:covModal.eid,fromName:covModal.name,fromDept:covModal.department,loggedAt:new Date().toISOString(),...covForm}});
-    if(res?.success){notify("Coverage logged");setCovModal(null);loadCoverages();} else notify("Save failed","error");
-  };
+  const sendReminder=async()=>{setSending(true);const res=await call({action:"sendReminder",weekEnd:weekEndStr});setSending(false);if(res?.success)notify("Reminder sent!");else notify("Failed","error");};
 
-  // Profile
-  const openProfile=async emp=>{
-    setProfileEmp(emp); setProfileAbs([]); setProfileTermData(null); setProfileLoad(true);
-    const [absD,termD]=await Promise.all([call({action:"getAllAbsences",eid:emp.eid}),call({action:"getTermination",eid:emp.eid})]);
-    if(absD?.absences) setProfileAbs(absD.absences);
-    if(termD?.termination) setProfileTermData(termD.termination);
-    setProfileLoad(false);
-  };
+  const active    = employees.filter(e=>!e.status||e.status==="Active"||e.status==="");
+  const inactive  = employees.filter(e=>e.status==="Inactive");
+  const submitted = new Set(timesheets.filter(t=>t.submitted===true||t.submitted==="TRUE").map(t=>t.eid));
+  const unsub     = active.filter(e=>!submitted.has(e.eid));
+  const pct       = active.length?Math.round((submitted.size/active.length)*100):0;
+  const birthdays = active.map(e=>({...e,days:daysUntilBirthday(e.birthday)})).filter(e=>e.days!==null&&e.days<=7).sort((a,b)=>a.days-b.days);
+  const totalLost = absences.reduce((s,a)=>s+calcHoursLost(a),0);
+  const totalAbsD = absences.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="").length,0);
+  const totalLateD= absences.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_lateReason`]&&a[`${d}_lateReason`]!=="").length,0);
+  const {out:covOut,inp:covInp}=calcCoverage(coverages);
 
-  const sendReminder=async()=>{
-    setSending(true);
-    const res=await call({action:"sendReminder",weekEnd:weekEndStr});
-    setSending(false);
-    if(res?.success) notify("Reminder sent!"); else notify("Failed to send","error");
-  };
+  // Reports computed data
+  const now = new Date();
+  const rangeMs = reportRange==="week"?7:reportRange==="month"?30:90;
+  const cutoff  = new Date(now.getTime()-rangeMs*86400000);
+  const filteredAbs = allAbsData.filter(a=>{
+    const p=String(a.weekEnd).split("-");
+    if(p.length<3)return false;
+    return new Date(+p[0],+p[1]-1,+p[2])>=cutoff;
+  });
 
-  // Computed
-  const active     = employees.filter(e=>!e.status||e.status==="Active"||e.status==="");
-  const inactive   = employees.filter(e=>e.status==="Inactive");
-  const submitted  = new Set(timesheets.filter(t=>t.submitted===true||t.submitted==="TRUE").map(t=>t.eid));
-  const unsub      = active.filter(e=>!submitted.has(e.eid));
-  const pct        = active.length?Math.round((submitted.size/active.length)*100):0;
-  const birthdays  = active.map(e=>({...e,days:daysUntilBirthday(e.birthday)})).filter(e=>e.days!==null&&e.days<=7).sort((a,b)=>a.days-b.days);
-  const totalLost  = absences.reduce((s,a)=>s+calcHoursLost(a),0);
-  const totalAbsD  = absences.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="").length,0);
-  const totalLateD = absences.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_lateReason`]&&a[`${d}_lateReason`]!=="").length,0);
-  const {out:covOut,inp:covInp} = calcCoverage(coverages);
+  // Hours lost by dept
+  const hoursByDept={};DEPARTMENTS.forEach(d=>{hoursByDept[d]=0;});
+  filteredAbs.forEach(a=>{if(hoursByDept[a.department]!==undefined)hoursByDept[a.department]+=calcHoursLost(a);});
 
-  // ── Setup screen ──────────────────────────────────────────────────────
-  if(!setupDone) return (
+  // Top absent employees
+  const empAbsMap={};
+  filteredAbs.forEach(a=>{
+    if(!empAbsMap[a.eid])empAbsMap[a.eid]={name:a.name,dept:a.department,days:0,hours:0};
+    empAbsMap[a.eid].days+=DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="").length;
+    empAbsMap[a.eid].hours+=calcHoursLost(a);
+  });
+  const topAbsent=Object.values(empAbsMap).sort((a,b)=>b.hours-a.hours).slice(0,8);
+
+  // Reason breakdown
+  const reasonMap={};
+  filteredAbs.forEach(a=>DAYS.forEach(d=>{if(a[`${d}_absent`]&&a[`${d}_absent`]!=="")reasonMap[a[`${d}_absent`]]=(reasonMap[a[`${d}_absent`]]||0)+1;}));
+
+  // Temp vs FT from pending data (all time)
+  const tempCount=pending.filter(p=>p.isTemp==="Temp").length;
+  const ftCount  =pending.filter(p=>p.isTemp==="Full-Time").length;
+  const wdYes    =pending.filter(p=>p.isTemp==="Full-Time"&&p.workday==="Yes").length;
+  const wdNo     =pending.filter(p=>p.isTemp==="Full-Time"&&p.workday==="No").length;
+
+  const totalReportHours=Object.values(hoursByDept).reduce((s,v)=>s+v,0);
+
+  if(!setupDone) return(
     <div className="setup">
-      <div className="setup-icon"><i className="ti ti-building-factory-2" style={{fontSize:30,color:"#1d4ed8"}}/></div>
+      <img src={NVENT_LOGO} style={{height:60,marginBottom:8}} alt="nVent"/>
       <h1 style={{fontSize:24,fontWeight:600}}>Workforce Tracker</h1>
-      <p style={{color:"#6b7280",fontSize:14,maxWidth:380}}>Paste your Google Apps Script web app URL to connect your Google Sheet.</p>
+      <p style={{color:"#6b7280",fontSize:14,maxWidth:380}}>Paste your Google Apps Script web app URL to connect.</p>
       <div style={{display:"flex",gap:8,width:"100%",maxWidth:520}}>
-        <input value={urlDraft} onChange={e=>setUrlDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(()=>{localStorage.setItem("wt_gasUrl",urlDraft.trim());setSetupDone(true);})()} placeholder="https://script.google.com/macros/s/..."/>
+        <input value={urlDraft} onChange={e=>setUrlDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&(()=>{localStorage.setItem("wt_gasUrl",urlDraft.trim());setSetupDone(true);})()}  placeholder="https://script.google.com/macros/s/..."/>
         <button className="primary" onClick={()=>{localStorage.setItem("wt_gasUrl",urlDraft.trim());setSetupDone(true);}}>Connect</button>
       </div>
     </div>
   );
 
-  // ── Login screen ──────────────────────────────────────────────────────
-  if(!session) return (
+  if(!session) return(
     <div className="setup">
-      <div className="setup-icon"><i className="ti ti-lock" style={{fontSize:30,color:"#1d4ed8"}}/></div>
-      <h1 style={{fontSize:24,fontWeight:600}}>Workforce Tracker</h1>
-      {timedOut&&<div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:8,padding:"10px 18px",fontSize:13,color:"#92400e"}}>
-        Session expired after 8 hours of inactivity
-      </div>}
+      <img src={NVENT_LOGO} style={{height:60,marginBottom:8}} alt="nVent"/>
+      <h1 style={{fontSize:22,fontWeight:600,color:"#404040"}}>Workforce Tracker</h1>
+      <p style={{fontSize:12,color:"#9ca3af"}}>nVent Hoffman — 2nd Shift</p>
+      {timedOut&&<div style={{background:"#fffbeb",border:"1px solid #fde68a",borderRadius:8,padding:"10px 18px",fontSize:13,color:"#92400e"}}>Session expired after 8 hours</div>}
       <div style={{width:"100%",maxWidth:340,display:"flex",flexDirection:"column",gap:12}}>
-        <div><label className="field">Username</label><input value={loginForm.username} onChange={e=>setLoginForm(p=>({...p,username:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="Username" autoFocus/></div>
+        <div><label className="field">Username</label><input value={loginForm.username} onChange={e=>setLoginForm(p=>({...p,username:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&doLogin()} autoFocus placeholder="Username"/></div>
         <div><label className="field">Password</label><input type="password" value={loginForm.password} onChange={e=>setLoginForm(p=>({...p,password:e.target.value}))} onKeyDown={e=>e.key==="Enter"&&doLogin()} placeholder="Password"/></div>
-        {loginError&&<p style={{fontSize:13,color:"#991b1b",textAlign:"center"}}>{loginError}</p>}
-        <button className="primary" onClick={doLogin} disabled={loginLoading} style={{width:"100%",justifyContent:"center",padding:"10px"}}>
-          {loginLoading?"Signing in...":"Sign in"}
-        </button>
+        {loginError&&<p style={{fontSize:13,color:"#E2001A",textAlign:"center"}}>{loginError}</p>}
+        <button className="primary" onClick={doLogin} disabled={loginLoad} style={{width:"100%",justifyContent:"center",padding:"10px"}}>{loginLoad?"Signing in...":"Sign in"}</button>
       </div>
-      <p style={{fontSize:11,color:"#9ca3af"}}>Users are managed in the Users tab of your Google Sheet</p>
+      <p style={{fontSize:11,color:"#9ca3af"}}>Managed by nVent Hoffman 2nd Shift Operations</p>
     </div>
   );
 
-  // ── Main app ──────────────────────────────────────────────────────────
-  return (
+  return(
     <div>
-      {/* Header */}
-      <div style={{display:"flex",alignItems:"center",paddingTop:20}}>
-        <i className="ti ti-building-factory-2" style={{fontSize:22,color:"#1d4ed8",marginRight:8}}/>
-        <span style={{fontWeight:700,fontSize:18}}>Workforce Tracker</span>
+      <div className="nvent-header" style={{marginTop:20,borderRadius:"12px 12px 0 0"}}>
+        <img src={NVENT_LOGO} className="nvent-logo" alt="nVent"/>
+        <div className="nvent-divider"/>
+        <div>
+          <div className="nvent-title">Workforce Tracker</div>
+          <div className="nvent-sub">Hoffman Division — 2nd Shift</div>
+        </div>
         <div style={{flex:1}}/>
-        <span style={{fontSize:12,color:"#9ca3af",marginRight:14,display:"flex",alignItems:"center",gap:5}}>
+        {pending.length>0&&(
+          <span style={{background:"#E2001A",color:"#fff",borderRadius:20,padding:"3px 10px",fontSize:12,fontWeight:600,marginRight:8}}>
+            {pending.length} pending
+          </span>
+        )}
+        <span style={{fontSize:12,color:"rgba(255,255,255,.7)",marginRight:12,display:"flex",alignItems:"center",gap:6}}>
           <i className="ti ti-user" style={{fontSize:13}}/>{session.username}
-          <span style={{padding:"2px 8px",background:session.role==="Admin"?"#eff6ff":"#f9fafb",color:session.role==="Admin"?"#1d4ed8":"#6b7280",borderRadius:20,fontSize:11,fontWeight:600}}>{session.role}</span>
+          <span style={{padding:"2px 8px",background:"rgba(255,255,255,.15)",color:"#fff",borderRadius:20,fontSize:11,fontWeight:600}}>{session.role}</span>
         </span>
-        <button onClick={logout} style={{fontSize:12,color:"#9ca3af"}}>
+        <button onClick={()=>setPwModal(true)} style={{fontSize:12,background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",color:"#fff",marginRight:6}}>
+          <i className="ti ti-lock" style={{fontSize:13}}/>
+        </button>
+        <button onClick={logout} style={{fontSize:12,background:"rgba(255,255,255,.1)",border:"1px solid rgba(255,255,255,.2)",color:"#fff"}}>
           <i className="ti ti-logout" style={{fontSize:13}}/> Logout
         </button>
       </div>
 
-      {/* Nav */}
       <div className="nav">
         {[{id:"dashboard",icon:"ti-layout-dashboard",label:"Dashboard"},
           {id:"employees", icon:"ti-users",           label:"Employees"},
-          {id:"timesheets",icon:"ti-clipboard-check", label:"Timesheets"}].map(({id,icon,label})=>(
+          {id:"timesheets",icon:"ti-clipboard-check", label:"Timesheets"},
+          {id:"reports",   icon:"ti-chart-bar",       label:"Reports"},
+        ].map(({id,icon,label})=>(
           <button key={id} className={`nav-btn ${tab===id?"active":""}`} onClick={()=>setTab(id)}>
             <i className={`ti ${icon}`} style={{fontSize:15}}/> {label}
+            {id==="timesheets"&&pending.length>0&&<span style={{background:"#E2001A",color:"#fff",borderRadius:20,padding:"1px 7px",fontSize:10,fontWeight:700}}>{pending.length}</span>}
           </button>
         ))}
       </div>
@@ -415,97 +403,68 @@ function App() {
       {/* ── DASHBOARD ── */}
       {tab==="dashboard"&&(
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-          {/* Week nav */}
           <div style={{gridColumn:"1/-1",display:"flex",alignItems:"center",gap:10,marginBottom:4}}>
             <button onClick={()=>setWeekOff(w=>w-1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-left"/></button>
-            <div>
-              <p style={{margin:0,fontSize:11,color:"#9ca3af"}}>Week ending</p>
-              <p style={{margin:0,fontWeight:600,fontSize:15}}>{weekEnd.toLocaleDateString("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"})}</p>
-            </div>
+            <div><p style={{margin:0,fontSize:11,color:"#9ca3af"}}>Week ending</p><p style={{margin:0,fontWeight:600,fontSize:15}}>{weekEnd.toLocaleDateString("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"})}</p></div>
             <button onClick={()=>setWeekOff(w=>w+1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-right"/></button>
             {weekOff!==0&&<button onClick={()=>setWeekOff(0)}>Current week</button>}
           </div>
 
-          {/* Timesheets card */}
           <div className="card">
             <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}>THIS WEEK — TIMESHEETS</p>
             <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:6}}>
-              <span style={{fontSize:48,fontWeight:700,lineHeight:1,color:pct===100?"#065f46":"#1a1a2e"}}>{submitted.size}</span>
+              <span className="stat-big" style={{color:pct===100?"#065f46":"#E2001A"}}>{submitted.size}</span>
               <span style={{fontSize:20,color:"#9ca3af"}}>/ {active.length}</span>
             </div>
             <p style={{fontSize:13,color:"#6b7280",marginBottom:14}}>submitted this week</p>
-            <div className="prog-track" style={{marginBottom:12}}>
-              <div className="prog-fill" style={{width:`${pct}%`,background:pct===100?"#10b981":pct>=50?"#f59e0b":"#ef4444"}}/>
-            </div>
-            {unsub.length>0&&<div style={{padding:"10px 12px",background:"#fef2f2",borderRadius:8,fontSize:12,color:"#991b1b",display:"flex",alignItems:"center",gap:6}}>
-              <i className="ti ti-alert-triangle" style={{fontSize:14}}/>{unsub.length} pending — deadline Tue 10:00 AM
-            </div>}
-            {pct===100&&active.length>0&&<div style={{padding:"10px 12px",background:"#ecfdf5",borderRadius:8,fontSize:12,color:"#065f46",display:"flex",alignItems:"center",gap:6}}>
-              <i className="ti ti-circle-check" style={{fontSize:14}}/> All submitted!
-            </div>}
+            <div className="prog-track" style={{marginBottom:12}}><div className="prog-fill" style={{width:`${pct}%`,background:pct===100?"#10b981":"#E2001A"}}/></div>
+            {unsub.length>0&&<div style={{padding:"10px 12px",background:"#fef2f2",borderRadius:8,fontSize:12,color:"#991b1b",display:"flex",alignItems:"center",gap:6}}><i className="ti ti-alert-triangle" style={{fontSize:14}}/>{unsub.length} pending — Tue 10:00 AM</div>}
+            {pct===100&&active.length>0&&<div style={{padding:"10px 12px",background:"#ecfdf5",borderRadius:8,fontSize:12,color:"#065f46",display:"flex",alignItems:"center",gap:6}}><i className="ti ti-circle-check" style={{fontSize:14}}/> All submitted!</div>}
           </div>
 
-          {/* Birthdays */}
           <div className="card">
-            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}>
-              <i className="ti ti-cake" style={{fontSize:12,marginRight:5}}/>UPCOMING BIRTHDAYS (7 DAYS)
-            </p>
-            {birthdays.length===0
-              ?<p style={{fontSize:13,color:"#9ca3af"}}>No birthdays in the next 7 days</p>
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-cake" style={{fontSize:12,marginRight:5}}/>UPCOMING BIRTHDAYS (7 DAYS)</p>
+            {birthdays.length===0?<p style={{fontSize:13,color:"#9ca3af"}}>No birthdays in the next 7 days</p>
               :birthdays.map(e=>(
                 <div key={e.eid} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 0",borderBottom:"1px solid #f3f4f6"}}>
                   <div><p style={{margin:0,fontWeight:600,fontSize:14}}>{e.name}</p><p style={{margin:0,fontSize:12,color:"#6b7280"}}>{e.department} · {fmtDate(e.birthday)}</p></div>
                   <span className={`badge ${e.days===0?"today":"blue"}`}>{e.days===0?"🎂 Today!":`In ${e.days}d`}</span>
                 </div>
-              ))
-            }
+              ))}
           </div>
 
-          {/* Man hours */}
           <div className="card">
-            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}>
-              <i className="ti ti-clock-x" style={{fontSize:12,marginRight:5}}/>MAN HOURS LOST — 2ND SHIFT
-            </p>
+            <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-clock-x" style={{fontSize:12,marginRight:5}}/>MAN HOURS LOST — 2ND SHIFT</p>
             <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:14}}>
-              <span style={{fontSize:48,fontWeight:700,lineHeight:1,color:totalLost>0?"#b91c1c":"#065f46"}}>{totalLost}</span>
+              <span className="stat-big" style={{color:totalLost>0?"#E2001A":"#065f46"}}>{totalLost}</span>
               <span style={{fontSize:16,color:"#9ca3af"}}>hrs this week</span>
             </div>
             <div style={{display:"flex",gap:10,flexWrap:"wrap"}}>
-              <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 14px"}}>
-                <p style={{margin:0,fontSize:10,color:"#991b1b",fontWeight:600}}>ABSENT</p>
-                <p style={{margin:0,fontSize:22,fontWeight:700,color:"#991b1b"}}>{totalAbsD}d</p>
-              </div>
-              <div style={{background:"#fffbeb",borderRadius:8,padding:"8px 14px"}}>
-                <p style={{margin:0,fontSize:10,color:"#92400e",fontWeight:600}}>LATE/LEFT</p>
-                <p style={{margin:0,fontSize:22,fontWeight:700,color:"#92400e"}}>{totalLateD}d</p>
-              </div>
+              <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 14px"}}><p style={{margin:0,fontSize:10,color:"#991b1b",fontWeight:600}}>ABSENT</p><p style={{margin:0,fontSize:22,fontWeight:700,color:"#991b1b"}}>{totalAbsD}d</p></div>
+              <div style={{background:"#fffbeb",borderRadius:8,padding:"8px 14px"}}><p style={{margin:0,fontSize:10,color:"#92400e",fontWeight:600}}>LATE/LEFT</p><p style={{margin:0,fontSize:22,fontWeight:700,color:"#92400e"}}>{totalLateD}d</p></div>
             </div>
           </div>
 
-          {/* Dept breakdown */}
           <div className="card" style={{gridColumn:"1/-1"}}>
             <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:16}}>DEPARTMENT BREAKDOWN</p>
             <div className="dept-grid">
               {DEPARTMENTS.map(dept=>{
-                const dEmps=active.filter(e=>e.department===dept);
-                const dSub=dEmps.filter(e=>submitted.has(e.eid)).length;
-                const dp=dEmps.length?Math.round((dSub/dEmps.length)*100):0;
-                const dAbs=absences.filter(a=>a.department===dept).reduce((s,a)=>s+calcHoursLost(a),0);
-                const dOut=covOut[dept]||0;
-                const dIn=covInp[dept]||0;
-                const net=Math.round((dAbs+dOut-dIn)*10)/10;
-                return (
+                const dE=active.filter(e=>e.department===dept);
+                const dS=dE.filter(e=>submitted.has(e.eid)).length;
+                const dp=dE.length?Math.round((dS/dE.length)*100):0;
+                const dA=absences.filter(a=>a.department===dept).reduce((s,a)=>s+calcHoursLost(a),0);
+                const dO=covOut[dept]||0,dI=covInp[dept]||0;
+                const net=Math.round((dA+dO-dI)*10)/10;
+                return(
                   <div key={dept} className="dept-card">
                     <p style={{margin:"0 0 4px",fontSize:10,color:"#9ca3af",fontWeight:600,letterSpacing:.5}}>{dept.toUpperCase()}</p>
-                    <p style={{margin:"0 0 8px",fontSize:22,fontWeight:700}}>{dSub}<span style={{fontSize:13,color:"#9ca3af",fontWeight:400}}>/{dEmps.length}</span></p>
-                    <div className="prog-track" style={{marginBottom:8}}>
-                      <div className="prog-fill" style={{width:`${dp}%`,background:dp===100?"#10b981":"#3b82f6"}}/>
-                    </div>
-                    {dAbs>0&&<p style={{fontSize:10,color:"#991b1b",margin:"2px 0",fontWeight:600}}><i className="ti ti-clock-x" style={{fontSize:9}}/> {dAbs}h lost</p>}
-                    {dOut>0&&<p style={{fontSize:10,color:"#92400e",margin:"2px 0",fontWeight:600}}><i className="ti ti-arrow-right" style={{fontSize:9}}/> {dOut}h out</p>}
-                    {dIn>0&&<p style={{fontSize:10,color:"#065f46",margin:"2px 0",fontWeight:600}}><i className="ti ti-arrow-left" style={{fontSize:9}}/> {dIn}h in</p>}
-                    {net>0&&<p style={{fontSize:11,color:"#991b1b",margin:"6px 0 0",fontWeight:700,borderTop:"1px solid #e5e7eb",paddingTop:5}}>Net: -{net}h</p>}
-                    {net<=0&&(dAbs>0||dIn>0)&&<p style={{fontSize:11,color:"#065f46",margin:"6px 0 0",fontWeight:700,borderTop:"1px solid #e5e7eb",paddingTop:5}}>✓ Covered</p>}
+                    <p style={{margin:"0 0 8px",fontSize:22,fontWeight:700}}>{dS}<span style={{fontSize:13,color:"#9ca3af",fontWeight:400}}>/{dE.length}</span></p>
+                    <div className="prog-track" style={{marginBottom:8}}><div className="prog-fill" style={{width:`${dp}%`,background:dp===100?"#10b981":"#E2001A"}}/></div>
+                    {dA>0&&<p style={{fontSize:10,color:"#991b1b",margin:"2px 0",fontWeight:600}}><i className="ti ti-clock-x" style={{fontSize:9}}/> {dA}h lost</p>}
+                    {dO>0&&<p style={{fontSize:10,color:"#92400e",margin:"2px 0",fontWeight:600}}><i className="ti ti-arrow-right" style={{fontSize:9}}/> {dO}h out</p>}
+                    {dI>0&&<p style={{fontSize:10,color:"#065f46",margin:"2px 0",fontWeight:600}}><i className="ti ti-arrow-left" style={{fontSize:9}}/> {dI}h in</p>}
+                    {net>0&&<p style={{fontSize:11,color:"#E2001A",margin:"6px 0 0",fontWeight:700,borderTop:"1px solid #e5e7eb",paddingTop:5}}>Net: -{net}h</p>}
+                    {net<=0&&(dA>0||dI>0)&&<p style={{fontSize:11,color:"#065f46",margin:"6px 0 0",fontWeight:700,borderTop:"1px solid #e5e7eb",paddingTop:5}}>✓ Covered</p>}
                   </div>
                 );
               })}
@@ -519,19 +478,15 @@ function App() {
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
             <p style={{color:"#6b7280",fontSize:13}}>{loading?"Loading...":`${active.length} active · ${inactive.length} inactive`}</p>
-            {isAdmin&&<button className="primary" onClick={()=>{setForm({department:DEPARTMENTS[0],status:"Active"});setModal("add");}}>
-              <i className="ti ti-plus" style={{fontSize:14}}/> Add employee
-            </button>}
+            {isAdmin&&<button className="primary" onClick={()=>{setForm({department:DEPARTMENTS[0],status:"Active"});setModal("add");}}><i className="ti ti-plus" style={{fontSize:14}}/> Add employee</button>}
           </div>
-
           {DEPARTMENTS.map(dept=>{
-            const dEmps=active.filter(e=>e.department===dept);
-            if(!dEmps.length) return null;
-            return (
+            const dE=active.filter(e=>e.department===dept);if(!dE.length)return null;
+            return(
               <div key={dept} style={{marginBottom:28}}>
-                <p style={{margin:"0 0 10px",fontSize:11,color:"#6b7280",fontWeight:600,letterSpacing:.6}}>{dept.toUpperCase()} · {dEmps.length}</p>
+                <p style={{margin:"0 0 10px",fontSize:11,color:"#6b7280",fontWeight:600,letterSpacing:.6}}>{dept.toUpperCase()} · {dE.length}</p>
                 <div className="emp-grid">
-                  {dEmps.map(emp=>(
+                  {dE.map(emp=>(
                     <div key={emp.eid} className="emp-card" onClick={()=>openProfile(emp)}>
                       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
                         <div className="avatar">{initials(emp.name)}</div>
@@ -547,15 +502,9 @@ function App() {
                         {emp.phone&&<span><i className="ti ti-phone" style={{fontSize:11,marginRight:4}}/>{emp.phone}</span>}
                       </div>
                       {isAdmin&&<div style={{display:"flex",gap:6}} onClick={e=>e.stopPropagation()}>
-                        <button style={{flex:1,fontSize:12}} onClick={()=>{setForm({...emp});setModal("edit");}}>
-                          <i className="ti ti-edit" style={{fontSize:12}}/> Edit
-                        </button>
-                        <button className="amber" style={{fontSize:12}} onClick={()=>openTerminate(emp)}>
-                          <i className="ti ti-user-minus" style={{fontSize:12}}/>
-                        </button>
-                        <button className="danger" style={{fontSize:12}} onClick={()=>deleteEmployee(emp.eid,emp.name)}>
-                          <i className="ti ti-trash" style={{fontSize:13}}/>
-                        </button>
+                        <button style={{flex:1,fontSize:12}} onClick={()=>{setForm({...emp});setModal("edit");}}><i className="ti ti-edit" style={{fontSize:12}}/> Edit</button>
+                        <button className="amber" style={{fontSize:12}} onClick={()=>openTerminate(emp)}><i className="ti ti-user-minus" style={{fontSize:12}}/></button>
+                        <button className="danger" style={{fontSize:12}} onClick={()=>deleteEmployee(emp.eid,emp.name)}><i className="ti ti-trash" style={{fontSize:13}}/></button>
                       </div>}
                     </div>
                   ))}
@@ -563,43 +512,26 @@ function App() {
               </div>
             );
           })}
-
-          {/* Inactive section */}
           {inactive.length>0&&(
             <div style={{marginTop:32}}>
-              <div className="divider">
-                <div className="divider-line"/>
-                <span className="divider-label">INACTIVE — {inactive.length} EMPLOYEE{inactive.length!==1?"S":""}</span>
-                <div className="divider-line"/>
-              </div>
+              <div className="divider"><div className="divider-line"/><span className="divider-label">INACTIVE — {inactive.length} EMPLOYEE{inactive.length!==1?"S":""}</span><div className="divider-line"/></div>
               <div className="emp-grid">
                 {inactive.map(emp=>(
                   <div key={emp.eid} className="emp-card inactive" onClick={()=>openProfile(emp)}>
                     <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12}}>
-                      <div className="avatar" style={{background:"#f3f4f6",color:"#9ca3af"}}>{initials(emp.name)}</div>
+                      <div className="avatar" style={{background:"#f3f4f6",color:"#9ca3af",border:"2px solid #e5e7eb"}}>{initials(emp.name)}</div>
                       <div style={{minWidth:0,flex:1}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:4}}>
                           <p style={{margin:0,fontWeight:600,fontSize:13,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{emp.name}</p>
-                          <span className="badge gray" style={{flexShrink:0}}>Inactive</span>
+                          <span className="badge gray">Inactive</span>
                         </div>
                         <p style={{margin:0,fontSize:11,color:"#9ca3af"}}>{emp.department} · {emp.eid}</p>
                       </div>
                     </div>
-                    {isAdmin&&<button className="success" style={{fontSize:12,width:"100%",justifyContent:"center"}}
-                      onClick={e=>{e.stopPropagation();reactivate(emp.eid,emp.name);}}>
-                      <i className="ti ti-user-check" style={{fontSize:12}}/> Reactivate
-                    </button>}
+                    {isAdmin&&<button className="success" style={{fontSize:12,width:"100%",justifyContent:"center"}} onClick={e=>{e.stopPropagation();reactivate(emp.eid,emp.name);}}><i className="ti ti-user-check" style={{fontSize:12}}/> Reactivate</button>}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {!loading&&active.length===0&&inactive.length===0&&(
-            <div style={{textAlign:"center",padding:"4rem",color:"#9ca3af"}}>
-              <i className="ti ti-users" style={{fontSize:48,display:"block",marginBottom:12}}/>
-              <p style={{marginBottom:16}}>No employees yet</p>
-              {isAdmin&&<button className="primary" onClick={()=>{setForm({department:DEPARTMENTS[0],status:"Active"});setModal("add");}}>Add first employee</button>}
             </div>
           )}
         </div>
@@ -608,13 +540,30 @@ function App() {
       {/* ── TIMESHEETS ── */}
       {tab==="timesheets"&&(
         <div>
+          {pending.length>0&&(
+            <div className="card" style={{marginBottom:16,border:"1px solid #fecaca"}}>
+              <p style={{fontSize:11,color:"#991b1b",fontWeight:600,letterSpacing:.6,marginBottom:12}}><i className="ti ti-clock" style={{fontSize:12,marginRight:5}}/>PENDING EMPLOYEE SUBMISSIONS — {pending.length}</p>
+              <div className="pending-header"><span>NAME</span><span>DEPT</span><span>TYPE</span><span>REASON</span><span>WORKDAY</span><span>ACTION</span></div>
+              {pending.map(p=>(
+                <div key={p.id} className="pending-row">
+                  <span style={{fontWeight:600,fontSize:13}}>{p.name}</span>
+                  <span style={{fontSize:12,color:"#6b7280"}}>{p.department}</span>
+                  <span style={{fontSize:12}}>{p.attType}</span>
+                  <span style={{fontSize:12,color:"#6b7280"}}>{p.reason}</span>
+                  <span>{p.isTemp==="Temp"?<span className="badge gray">Temp</span>:<span className={`badge ${p.workday==="Yes"?"green":"red"}`}>{p.workday}</span>}</span>
+                  <div style={{display:"flex",gap:5}}>
+                    <button className="success" style={{fontSize:11,padding:"4px 8px"}} onClick={()=>approvePending(p.id)}>✓</button>
+                    <button className="danger"  style={{fontSize:11,padding:"4px 8px"}} onClick={()=>rejectPending(p.id)}>✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
             <div style={{display:"flex",alignItems:"center",gap:10}}>
               <button onClick={()=>setWeekOff(w=>w-1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-left"/></button>
-              <div>
-                <p style={{margin:0,fontSize:11,color:"#9ca3af"}}>Week ending</p>
-                <p style={{margin:0,fontWeight:600,fontSize:15}}>{weekEnd.toLocaleDateString("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"})}</p>
-              </div>
+              <div><p style={{margin:0,fontSize:11,color:"#9ca3af"}}>Week ending</p><p style={{margin:0,fontWeight:600,fontSize:15}}>{weekEnd.toLocaleDateString("en-US",{weekday:"short",month:"long",day:"numeric",year:"numeric"})}</p></div>
               <button onClick={()=>setWeekOff(w=>w+1)} style={{padding:"7px 11px"}}><i className="ti ti-chevron-right"/></button>
               {weekOff!==0&&<button onClick={()=>setWeekOff(0)}>Current week</button>}
             </div>
@@ -624,12 +573,9 @@ function App() {
           </div>
 
           <div style={{display:"flex",gap:10,marginBottom:16,flexWrap:"wrap"}}>
-            {[{l:"Submitted",v:submitted.size,bg:"#ecfdf5",c:"#065f46"},
-              {l:"Pending",v:unsub.length,bg:"#fef2f2",c:"#991b1b"},
-              {l:"Absent days",v:totalAbsD,bg:"#fef2f2",c:"#991b1b"},
-              {l:"Late/Left",v:totalLateD,bg:"#fffbeb",c:"#92400e"},
-              {l:"Hrs lost",v:`${totalLost}h`,bg:"#f3f4f6",c:"#374151"},
-            ].map(({l,v,bg,c})=>(
+            {[{l:"Submitted",v:submitted.size,bg:"#ecfdf5",c:"#065f46"},{l:"Pending",v:unsub.length,bg:"#fef2f2",c:"#991b1b"},
+              {l:"Absent days",v:totalAbsD,bg:"#fef2f2",c:"#991b1b"},{l:"Late/Left",v:totalLateD,bg:"#fffbeb",c:"#92400e"},
+              {l:"Hrs lost",v:`${totalLost}h`,bg:"#f3f4f6",c:"#374151"}].map(({l,v,bg,c})=>(
               <div key={l} style={{background:bg,borderRadius:10,padding:"8px 14px"}}>
                 <p style={{margin:0,fontSize:10,color:c,fontWeight:600}}>{l}</p>
                 <p style={{margin:0,fontSize:20,fontWeight:700,color:c}}>{v}</p>
@@ -638,16 +584,14 @@ function App() {
           </div>
 
           <div className="card" style={{padding:0,overflow:"hidden"}}>
-            <div className="ts-header">
-              <span>EMPLOYEE</span><span>EID</span><span>DEPARTMENT</span><span>SUBMITTED</span><span>ATTENDANCE</span><span>COVERAGE</span>
-            </div>
+            <div className="ts-header"><span>EMPLOYEE</span><span>EID</span><span>DEPARTMENT</span><span>SUBMITTED</span><span>ATTENDANCE</span><span>COVERAGE</span></div>
             {DEPARTMENTS.flatMap(dept=>active.filter(e=>e.department===dept)).map((emp,i)=>{
-              const ts=tsFor(emp.eid), abs=absFor(emp.eid), cov=covFor(emp.eid);
+              const ts=tsFor(emp.eid),abs=absFor(emp.eid),cov=covFor(emp.eid);
               const absDays=DAYS.filter(d=>abs[`${d}_absent`]&&abs[`${d}_absent`]!=="");
               const lateDays=DAYS.filter(d=>abs[`${d}_lateReason`]&&abs[`${d}_lateReason`]!=="");
-              const covDays=DAYS.filter(d=>cov[`${d}_toDept`]&&cov[`${d}_toDept`]!=="");
-              const hLost=calcHoursLost(abs);
-              return (
+              const covDays =DAYS.filter(d=>cov[`${d}_toDept`]&&cov[`${d}_toDept`]!=="");
+              const hLost   =calcHoursLost(abs);
+              return(
                 <div key={emp.eid} className="ts-row">
                   <span style={{fontWeight:600}}>{emp.name}</span>
                   <span style={{fontFamily:"monospace",fontSize:11,color:"#9ca3af"}}>{emp.eid}</span>
@@ -662,7 +606,7 @@ function App() {
                       :<>
                         {absDays.map(d=><span key={`a${d}`} className="dp-abs">{DAY_LABELS[d]}</span>)}
                         {lateDays.map(d=><span key={`l${d}`} className="dp-late">{DAY_LABELS[d]}</span>)}
-                        {hLost>0&&<span style={{fontSize:11,color:"#991b1b",fontWeight:600,marginLeft:2}}>-{hLost}h</span>}
+                        {hLost>0&&<span style={{fontSize:11,color:"#E2001A",fontWeight:600,marginLeft:2}}>-{hLost}h</span>}
                         {isAdmin&&<button style={{fontSize:11,padding:"2px 7px",marginLeft:2}} onClick={()=>openAbsModal(emp)}><i className="ti ti-edit" style={{fontSize:11}}/></button>}
                       </>
                     }
@@ -671,7 +615,7 @@ function App() {
                     {covDays.length===0
                       ?isAdmin&&<button className="success" style={{fontSize:11,padding:"3px 8px"}} onClick={()=>openCovModal(emp)}><i className="ti ti-arrow-left-right" style={{fontSize:11}}/> Log</button>
                       :<>
-                        {covDays.map(d=><span key={d} className="dp-cov" title={cov[`${d}_toDept`]}>{DAY_LABELS[d]}→{(cov[`${d}_toDept`]||"").split(" ")[0]} {cov[`${d}_hours`]}h</span>)}
+                        {covDays.map(d=><span key={d} className="dp-cov">{DAY_LABELS[d]}→{(cov[`${d}_toDept`]||"").split(" ")[0]} {cov[`${d}_hours`]}h</span>)}
                         {isAdmin&&<button style={{fontSize:11,padding:"2px 7px"}} onClick={()=>openCovModal(emp)}><i className="ti ti-edit" style={{fontSize:11}}/></button>}
                       </>
                     }
@@ -684,7 +628,142 @@ function App() {
         </div>
       )}
 
-      {/* ── EMPLOYEE MODAL ── */}
+      {/* ── REPORTS ── */}
+      {tab==="reports"&&(
+        <div>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+            <div>
+              <p style={{fontSize:18,fontWeight:700,margin:0}}>Attendance Reports</p>
+              <p style={{fontSize:12,color:"#9ca3af",margin:0}}>Historical data — nVent Hoffman 2nd Shift</p>
+            </div>
+            <div style={{display:"flex",gap:8,alignItems:"center"}}>
+              <select value={reportRange} onChange={e=>setReportRange(e.target.value)} style={{width:"auto",fontSize:13}}>
+                <option value="week">Last 7 days</option>
+                <option value="month">Last 30 days</option>
+                <option value="quarter">Last 90 days</option>
+              </select>
+              <button className="primary" onClick={()=>window.print()}><i className="ti ti-printer" style={{fontSize:13}}/> Print / PDF</button>
+            </div>
+          </div>
+
+          {allAbsLoad?<div style={{textAlign:"center",padding:"3rem",color:"#9ca3af"}}><i className="ti ti-loader" style={{fontSize:32,display:"block",marginBottom:8}}/><p>Loading report data...</p></div>:(
+            <div className="report-grid">
+
+              {/* Total hours lost */}
+              <div className="card">
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-clock-x" style={{fontSize:12,marginRight:5}}/>TOTAL MAN HOURS LOST</p>
+                <span className="stat-big" style={{color:"#E2001A"}}>{totalReportHours}h</span>
+                <p style={{fontSize:13,color:"#6b7280",marginTop:6}}>{reportRange==="week"?"Last 7 days":reportRange==="month"?"Last 30 days":"Last 90 days"} · all departments</p>
+                <div style={{marginTop:16,display:"flex",flexDirection:"column",gap:8}}>
+                  {DEPARTMENTS.map(d=>(
+                    <div key={d} style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:13,fontWeight:500}}>{d}</span>
+                      <div style={{display:"flex",alignItems:"center",gap:10,flex:1,marginLeft:12}}>
+                        <div style={{flex:1,height:6,background:"#f3f4f6",borderRadius:3,overflow:"hidden"}}>
+                          <div style={{height:6,background:"#E2001A",borderRadius:3,width:totalReportHours?`${(hoursByDept[d]/totalReportHours*100)}%`:"0%"}}/>
+                        </div>
+                        <span style={{fontSize:12,fontWeight:600,color:"#E2001A",minWidth:32,textAlign:"right"}}>{hoursByDept[d]}h</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reason breakdown */}
+              <div className="card">
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-chart-pie" style={{fontSize:12,marginRight:5}}/>ABSENCE REASONS</p>
+                {Object.keys(reasonMap).length===0?<p style={{fontSize:13,color:"#9ca3af"}}>No data for this period</p>
+                  :Object.entries(reasonMap).sort((a,b)=>b[1]-a[1]).map(([r,c])=>{
+                    const total=Object.values(reasonMap).reduce((s,v)=>s+v,0);
+                    return(
+                      <div key={r} style={{marginBottom:12}}>
+                        <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:13,fontWeight:500}}>{r}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:"#E2001A"}}>{c} day{c!==1?"s":""} ({Math.round(c/total*100)}%)</span>
+                        </div>
+                        <div style={{height:6,background:"#f3f4f6",borderRadius:3,overflow:"hidden"}}>
+                          <div style={{height:6,background:"#E2001A",borderRadius:3,width:`${c/total*100}%`}}/>
+                        </div>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+
+              {/* Top absent employees */}
+              <div className="card" style={{gridColumn:"1/-1"}}>
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-users" style={{fontSize:12,marginRight:5}}/>TOP ABSENT EMPLOYEES</p>
+                {topAbsent.length===0?<p style={{fontSize:13,color:"#9ca3af"}}>No absence data for this period</p>
+                  :<table style={{width:"100%",borderCollapse:"collapse"}}>
+                    <thead><tr style={{borderBottom:"1px solid #e5e7eb"}}>
+                      {["Rank","Employee","Department","Absent Days","Hrs Lost"].map(h=>(
+                        <th key={h} style={{padding:"8px 12px",textAlign:"left",fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.5}}>{h}</th>
+                      ))}
+                    </tr></thead>
+                    <tbody>
+                      {topAbsent.map((e,i)=>(
+                        <tr key={e.name} style={{borderBottom:"1px solid #f3f4f6",background:i%2?"#f9fafb":"#fff"}}>
+                          <td style={{padding:"10px 12px",fontWeight:700,color:i===0?"#E2001A":"#6b7280",fontSize:14}}>#{i+1}</td>
+                          <td style={{padding:"10px 12px",fontWeight:600}}>{e.name}</td>
+                          <td style={{padding:"10px 12px",fontSize:12,color:"#6b7280"}}>{e.dept}</td>
+                          <td style={{padding:"10px 12px"}}><span className="badge red">{e.days}d</span></td>
+                          <td style={{padding:"10px 12px",fontWeight:600,color:"#E2001A"}}>{e.hours}h</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                }
+              </div>
+
+              {/* Temp vs FT */}
+              <div className="card">
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-id-badge" style={{fontSize:12,marginRight:5}}/>TEMP VS FULL-TIME ABSENCES</p>
+                <div style={{display:"flex",gap:16,marginBottom:14}}>
+                  <div style={{background:"#fef2f2",borderRadius:10,padding:"12px 20px",flex:1,textAlign:"center"}}>
+                    <p style={{margin:0,fontSize:10,color:"#991b1b",fontWeight:600}}>TEMP</p>
+                    <p style={{margin:0,fontSize:32,fontWeight:700,color:"#991b1b"}}>{tempCount}</p>
+                  </div>
+                  <div style={{background:"#eff6ff",borderRadius:10,padding:"12px 20px",flex:1,textAlign:"center"}}>
+                    <p style={{margin:0,fontSize:10,color:"#1d4ed8",fontWeight:600}}>FULL-TIME</p>
+                    <p style={{margin:0,fontSize:32,fontWeight:700,color:"#1d4ed8"}}>{ftCount}</p>
+                  </div>
+                </div>
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:8}}>WORKDAY COMPLIANCE (FULL-TIME)</p>
+                <div style={{display:"flex",gap:10}}>
+                  <div style={{background:"#ecfdf5",borderRadius:8,padding:"8px 14px",flex:1,textAlign:"center"}}>
+                    <p style={{margin:0,fontSize:10,color:"#065f46",fontWeight:600}}>SUBMITTED</p>
+                    <p style={{margin:0,fontSize:24,fontWeight:700,color:"#065f46"}}>{wdYes}</p>
+                  </div>
+                  <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 14px",flex:1,textAlign:"center"}}>
+                    <p style={{margin:0,fontSize:10,color:"#991b1b",fontWeight:600}}>NOT SUBMITTED</p>
+                    <p style={{margin:0,fontSize:24,fontWeight:700,color:"#991b1b"}}>{wdNo}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Molding coverage */}
+              <div className="card">
+                <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:14}}><i className="ti ti-arrow-left-right" style={{fontSize:12,marginRight:5}}/>MOLDING COVERAGE GIVEN</p>
+                <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:14}}>
+                  <span className="stat-big" style={{color:"#065f46"}}>{Object.values(covOut).reduce((s,v)=>s+v,0)}h</span>
+                  <span style={{fontSize:14,color:"#9ca3af"}}>total this week</span>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  {DEPARTMENTS.filter(d=>d!=="Molding").map(d=>(
+                    <div key={d} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"8px 12px",background:"#f9fafb",borderRadius:8}}>
+                      <span style={{fontSize:13}}>{d}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:covInp[d]>0?"#065f46":"#9ca3af"}}>{covInp[d]||0}h received</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── MODALS ── */}
       {modal&&(
         <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setModal(null);}}>
           <div className="modal">
@@ -697,8 +776,7 @@ function App() {
                 {f:"phone",l:"Phone",t:"tel"},{f:"email",l:"Email",t:"email"},{f:"hireDate",l:"Hire date",t:"date"},{f:"birthday",l:"Birthday",t:"date"}
               ].map(({f,l,t,span})=>(
                 <div key={f} style={span?{gridColumn:"1/-1"}:{}}>
-                  <label className="field">{l}</label>
-                  <input type={t} value={form[f]||""} onChange={e=>setForm(p=>({...p,[f]:e.target.value}))}/>
+                  <label className="field">{l}</label><input type={t} value={form[f]||""} onChange={e=>setForm(p=>({...p,[f]:e.target.value}))}/>
                 </div>
               ))}
               <div style={{gridColumn:"1/-1"}}>
@@ -716,7 +794,6 @@ function App() {
         </div>
       )}
 
-      {/* ── TERMINATE MODAL ── */}
       {termModal&&(
         <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setTermModal(null);}}>
           <div className="modal">
@@ -724,19 +801,11 @@ function App() {
               <h2 style={{fontSize:18,fontWeight:600}}>Mark as inactive</h2>
               <button onClick={()=>setTermModal(null)} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
             </div>
-            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}><strong>{termModal.name}</strong> · {termModal.department}</p>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}><strong>{termModal?.name}</strong> · {termModal?.department}</p>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
               <div style={{gridColumn:"1/-1"}}><label className="field">Last day worked *</label><input type="date" value={termForm.lastDay||""} onChange={e=>setTermForm(p=>({...p,lastDay:e.target.value}))}/></div>
-              <div style={{gridColumn:"1/-1"}}><label className="field">Reason</label>
-                <select value={termForm.reason||""} onChange={e=>setTermForm(p=>({...p,reason:e.target.value}))}>
-                  {TERM_REASONS.map(r=><option key={r} value={r}>{r}</option>)}
-                </select>
-              </div>
-              <div style={{gridColumn:"1/-1"}}><label className="field">Eligible for rehire?</label>
-                <select value={termForm.rehireEligible||"Yes"} onChange={e=>setTermForm(p=>({...p,rehireEligible:e.target.value}))}>
-                  <option value="Yes">Yes</option><option value="No">No</option>
-                </select>
-              </div>
+              <div style={{gridColumn:"1/-1"}}><label className="field">Reason</label><select value={termForm.reason||""} onChange={e=>setTermForm(p=>({...p,reason:e.target.value}))}>{TERM_REASONS.map(r=><option key={r} value={r}>{r}</option>)}</select></div>
+              <div style={{gridColumn:"1/-1"}}><label className="field">Eligible for rehire?</label><select value={termForm.rehireEligible||"Yes"} onChange={e=>setTermForm(p=>({...p,rehireEligible:e.target.value}))}><option value="Yes">Yes</option><option value="No">No</option></select></div>
               <div style={{gridColumn:"1/-1"}}><label className="field">Notes (optional)</label><input type="text" value={termForm.notes||""} onChange={e=>setTermForm(p=>({...p,notes:e.target.value}))} placeholder="Any additional notes..."/></div>
             </div>
             <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:20}}>
@@ -747,7 +816,6 @@ function App() {
         </div>
       )}
 
-      {/* ── ATTENDANCE MODAL ── */}
       {absModal&&(
         <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setAbsModal(null);}}>
           <div className="modal">
@@ -755,21 +823,14 @@ function App() {
               <h2 style={{fontSize:18,fontWeight:600}}>Log attendance</h2>
               <button onClick={()=>setAbsModal(null)} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
             </div>
-            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}>
-              <strong>{absModal.name}</strong> · {absModal.department}<br/>
-              <span style={{fontSize:12}}>Week of {weekDates[0]} – {weekDates[4]}</span>
-            </p>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}><strong>{absModal?.name}</strong> · {absModal?.department}<br/><span style={{fontSize:12}}>Week of {weekDates[0]} – {weekDates[4]}</span></p>
             <div className="att-section abs-sec">
-              <div className="att-title" style={{color:"#991b1b"}}><i className="ti ti-user-x" style={{fontSize:14}}/> ABSENT — full day (8 hrs lost automatically)</div>
+              <div className="att-title" style={{color:"#991b1b"}}><i className="ti ti-user-x" style={{fontSize:14}}/> ABSENT — full day (8 hrs lost)</div>
               {DAYS.map((day,i)=>(
                 <div key={`a${day}`} className="att-row">
                   <input type="checkbox" checked={!!absForm[`${day}_absent`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_absent`]:e.target.checked?ABS_REASONS[0]:""}))}/>
                   <span style={{fontSize:13,fontWeight:600}}>{DAY_LABELS[day]} <span style={{fontWeight:400,color:"#9ca3af",fontSize:11}}>{weekDates[i]}</span></span>
-                  {absForm[`${day}_absent`]
-                    ?<select value={absForm[`${day}_absent`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_absent`]:e.target.value}))}>
-                        {ABS_REASONS.map(r=><option key={r} value={r}>{r}</option>)}
-                      </select>
-                    :<span style={{fontSize:12,color:"#d1d5db",fontStyle:"italic"}}>Present</span>}
+                  {absForm[`${day}_absent`]?<select value={absForm[`${day}_absent`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_absent`]:e.target.value}))}>{ABS_REASONS.map(r=><option key={r} value={r}>{r}</option>)}</select>:<span style={{fontSize:12,color:"#d1d5db",fontStyle:"italic"}}>Present</span>}
                 </div>
               ))}
             </div>
@@ -779,27 +840,15 @@ function App() {
                 <div key={`l${day}`} className="att-row">
                   <input type="checkbox" checked={!!absForm[`${day}_lateReason`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_lateReason`]:e.target.checked?LATE_REASONS[0]:"",[`${day}_lateHours`]:e.target.checked?"1":""}))}/>
                   <span style={{fontSize:13,fontWeight:600}}>{DAY_LABELS[day]} <span style={{fontWeight:400,color:"#9ca3af",fontSize:11}}>{weekDates[i]}</span></span>
-                  {absForm[`${day}_lateReason`]
-                    ?<div style={{display:"flex",gap:6,alignItems:"center"}}>
-                        <select value={absForm[`${day}_lateReason`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_lateReason`]:e.target.value}))} style={{flex:1}}>
-                          {LATE_REASONS.map(r=><option key={r} value={r}>{r}</option>)}
-                        </select>
-                        <input type="number" min="0.5" max="7.5" step="0.5" value={absForm[`${day}_lateHours`]||""} onChange={e=>setAbsForm(p=>({...p,[`${day}_lateHours`]:e.target.value}))} style={{width:55}} placeholder="hrs"/>
-                        <span style={{fontSize:11,color:"#9ca3af"}}>h</span>
-                      </div>
-                    :<span style={{fontSize:12,color:"#d1d5db",fontStyle:"italic"}}>On time</span>}
+                  {absForm[`${day}_lateReason`]?<div style={{display:"flex",gap:6,alignItems:"center"}}><select value={absForm[`${day}_lateReason`]} onChange={e=>setAbsForm(p=>({...p,[`${day}_lateReason`]:e.target.value}))} style={{flex:1}}>{LATE_REASONS.map(r=><option key={r} value={r}>{r}</option>)}</select><input type="number" min="0.5" max="7.5" step="0.5" value={absForm[`${day}_lateHours`]||""} onChange={e=>setAbsForm(p=>({...p,[`${day}_lateHours`]:e.target.value}))} style={{width:55}} placeholder="hrs"/><span style={{fontSize:11,color:"#9ca3af"}}>h</span></div>:<span style={{fontSize:12,color:"#d1d5db",fontStyle:"italic"}}>On time</span>}
                 </div>
               ))}
             </div>
-            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-              <button onClick={()=>setAbsModal(null)}>Cancel</button>
-              <button className="primary" onClick={saveAbsences}>Save</button>
-            </div>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><button onClick={()=>setAbsModal(null)}>Cancel</button><button className="primary" onClick={saveAbsences}>Save</button></div>
           </div>
         </div>
       )}
 
-      {/* ── COVERAGE MODAL ── */}
       {covModal&&(
         <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setCovModal(null);}}>
           <div className="modal">
@@ -807,53 +856,58 @@ function App() {
               <h2 style={{fontSize:18,fontWeight:600}}>Log coverage</h2>
               <button onClick={()=>setCovModal(null)} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
             </div>
-            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}>
-              <strong>{covModal.name}</strong> · {covModal.department}<br/>
-              <span style={{fontSize:12}}>Week of {weekDates[0]} – {weekDates[4]} · Which dept did they cover and for how long?</span>
-            </p>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}><strong>{covModal?.name}</strong> · {covModal?.department}<br/><span style={{fontSize:12}}>Week of {weekDates[0]} – {weekDates[4]}</span></p>
             <div className="att-section cov-sec">
               <div className="att-title" style={{color:"#065f46"}}><i className="ti ti-arrow-left-right" style={{fontSize:14}}/> COVERAGE BY DAY</div>
               {DAYS.map((day,i)=>{
-                const otherDepts=DEPARTMENTS.filter(d=>d!==covModal.department);
-                return (
+                const other=DEPARTMENTS.filter(d=>d!==covModal?.department);
+                return(
                   <div key={day} className="att-row">
-                    <input type="checkbox" checked={!!covForm[`${day}_toDept`]} onChange={e=>setCovForm(p=>({...p,[`${day}_toDept`]:e.target.checked?otherDepts[0]:"",[`${day}_hours`]:e.target.checked?"8":""}))}/>
+                    <input type="checkbox" checked={!!covForm[`${day}_toDept`]} onChange={e=>setCovForm(p=>({...p,[`${day}_toDept`]:e.target.checked?other[0]:"",[`${day}_hours`]:e.target.checked?"8":""}))}/>
                     <span style={{fontSize:13,fontWeight:600}}>{DAY_LABELS[day]} <span style={{fontWeight:400,color:"#9ca3af",fontSize:11}}>{weekDates[i]}</span></span>
-                    {covForm[`${day}_toDept`]
-                      ?<div style={{display:"flex",gap:6,alignItems:"center"}}>
-                          <select value={covForm[`${day}_toDept`]} onChange={e=>setCovForm(p=>({...p,[`${day}_toDept`]:e.target.value}))} style={{flex:1}}>
-                            {otherDepts.map(d=><option key={d} value={d}>{d}</option>)}
-                          </select>
-                          <input type="number" min="1" max="8" step="0.5" value={covForm[`${day}_hours`]||""} onChange={e=>setCovForm(p=>({...p,[`${day}_hours`]:e.target.value}))} style={{width:55}} placeholder="hrs"/>
-                          <span style={{fontSize:11,color:"#9ca3af"}}>h</span>
-                        </div>
-                      :<span style={{fontSize:12,color:"#9ca3af",fontStyle:"italic"}}>Not covering</span>}
+                    {covForm[`${day}_toDept`]?<div style={{display:"flex",gap:6,alignItems:"center"}}><select value={covForm[`${day}_toDept`]} onChange={e=>setCovForm(p=>({...p,[`${day}_toDept`]:e.target.value}))} style={{flex:1}}>{other.map(d=><option key={d} value={d}>{d}</option>)}</select><input type="number" min="1" max="8" step="0.5" value={covForm[`${day}_hours`]||""} onChange={e=>setCovForm(p=>({...p,[`${day}_hours`]:e.target.value}))} style={{width:55}} placeholder="hrs"/><span style={{fontSize:11,color:"#9ca3af"}}>h</span></div>:<span style={{fontSize:12,color:"#9ca3af",fontStyle:"italic"}}>Not covering</span>}
                   </div>
                 );
               })}
             </div>
-            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}>
-              <button onClick={()=>setCovModal(null)}>Cancel</button>
-              <button className="primary" onClick={saveCoverage}>Save coverage</button>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end"}}><button onClick={()=>setCovModal(null)}>Cancel</button><button className="primary" onClick={saveCoverage}>Save coverage</button></div>
+          </div>
+        </div>
+      )}
+
+      {pwModal&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget){setPwModal(false);setPwError("");}}}>
+          <div className="modal" style={{maxWidth:380}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+              <h2 style={{fontSize:18,fontWeight:600}}>Change password</h2>
+              <button onClick={()=>{setPwModal(false);setPwError("");}} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div><label className="field">Current password</label><input type="password" value={pwForm.current} onChange={e=>setPwForm(p=>({...p,current:e.target.value}))}/></div>
+              <div><label className="field">New password</label><input type="password" value={pwForm.newPw} onChange={e=>setPwForm(p=>({...p,newPw:e.target.value}))}/></div>
+              <div><label className="field">Confirm new password</label><input type="password" value={pwForm.confirm} onChange={e=>setPwForm(p=>({...p,confirm:e.target.value}))}/></div>
+              {pwError&&<p style={{fontSize:13,color:"#E2001A"}}>{pwError}</p>}
+            </div>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:20}}>
+              <button onClick={()=>{setPwModal(false);setPwError("");}}>Cancel</button>
+              <button className="primary" onClick={changePassword}><i className="ti ti-lock" style={{fontSize:13}}/> Change password</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── PROFILE MODAL ── */}
       {profileEmp&&(()=>{
         const isInact=profileEmp.status==="Inactive";
         const totDays=profileAbs.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="").length,0);
         const totLate=profileAbs.reduce((s,a)=>s+DAYS.filter(d=>a[`${d}_lateReason`]&&a[`${d}_lateReason`]!=="").length,0);
         const totHrs =profileAbs.reduce((s,a)=>s+calcHoursLost(a),0);
-        const rc={};
-        profileAbs.forEach(a=>DAYS.forEach(d=>{ if(a[`${d}_absent`]&&a[`${d}_absent`]!=="") rc[a[`${d}_absent`]]=(rc[a[`${d}_absent`]]||0)+1; }));
-        return (
+        const rc={};profileAbs.forEach(a=>DAYS.forEach(d=>{if(a[`${d}_absent`]&&a[`${d}_absent`]!=="")rc[a[`${d}_absent`]]=(rc[a[`${d}_absent`]]||0)+1;}));
+        return(
           <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setProfileEmp(null);}}>
             <div className="modal" style={{maxWidth:540}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:20}}>
                 <div style={{display:"flex",alignItems:"center",gap:12}}>
-                  <div className="avatar" style={{width:48,height:48,fontSize:16,background:isInact?"#f3f4f6":"#dbeafe",color:isInact?"#9ca3af":"#1d4ed8"}}>{initials(profileEmp.name)}</div>
+                  <div className="avatar" style={{width:48,height:48,fontSize:16,background:isInact?"#f3f4f6":"#fff0f0",color:isInact?"#9ca3af":"#E2001A",border:`2px solid ${isInact?"#e5e7eb":"#fecaca"}`}}>{initials(profileEmp.name)}</div>
                   <div>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <h2 style={{fontSize:18,fontWeight:600,margin:0}}>{profileEmp.name}</h2>
@@ -864,68 +918,47 @@ function App() {
                 </div>
                 <button onClick={()=>setProfileEmp(null)} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
               </div>
-
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,padding:14,background:"#f9fafb",borderRadius:10,marginBottom:16}}>
-                {[["Job Title",profileEmp.jobTitle],["Phone",profileEmp.phone],["Hire Date",fmtDate(profileEmp.hireDate)],["Birthday",fmtDate(profileEmp.birthday)]]
-                  .filter(([,v])=>v&&v!=="—").map(([l,v])=>(
+                {[["Job Title",profileEmp.jobTitle],["Phone",profileEmp.phone],["Hire Date",fmtDate(profileEmp.hireDate)],["Birthday",fmtDate(profileEmp.birthday)]].filter(([,v])=>v&&v!=="—").map(([l,v])=>(
                   <div key={l}><p style={{margin:0,fontSize:10,color:"#9ca3af",fontWeight:600,letterSpacing:.5}}>{l.toUpperCase()}</p><p style={{margin:0,fontSize:13}}>{v}</p></div>
                 ))}
               </div>
-
-              {isInact&&profileTermData&&(
+              {isInact&&profileTerm&&(
                 <div style={{padding:14,background:"#fffbeb",border:"1px solid #fde68a",borderRadius:10,marginBottom:16}}>
                   <p style={{margin:"0 0 10px",fontSize:11,color:"#92400e",fontWeight:600,letterSpacing:.5}}>TERMINATION DETAILS</p>
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                    {[["Last Day",fmtDate(profileTermData.lastDay)],["Reason",profileTermData.reason],
-                      ["Rehire Eligible",profileTermData.rehireEligible],["Notes",profileTermData.notes||"—"]]
-                      .map(([l,v])=>(
-                      <div key={l} style={l==="Notes"?{gridColumn:"1/-1"}:{}}>
-                        <p style={{margin:0,fontSize:10,color:"#92400e",fontWeight:600}}>{l.toUpperCase()}</p>
-                        <p style={{margin:0,fontSize:13}}>{v}</p>
-                      </div>
+                    {[["Last Day",fmtDate(profileTerm.lastDay)],["Reason",profileTerm.reason],["Rehire Eligible",profileTerm.rehireEligible],["Notes",profileTerm.notes||"—"]].map(([l,v])=>(
+                      <div key={l} style={l==="Notes"?{gridColumn:"1/-1"}:{}}><p style={{margin:0,fontSize:10,color:"#92400e",fontWeight:600}}>{l.toUpperCase()}</p><p style={{margin:0,fontSize:13}}>{v}</p></div>
                     ))}
                   </div>
                 </div>
               )}
-
               <p style={{fontSize:11,color:"#9ca3af",fontWeight:600,letterSpacing:.6,marginBottom:12}}>ATTENDANCE HISTORY</p>
-              {profileLoad
-                ?<p style={{fontSize:13,color:"#9ca3af",textAlign:"center",padding:"20px 0"}}>Loading...</p>
-                :totDays===0&&totLate===0
-                  ?<div style={{textAlign:"center",padding:"20px 0",color:"#9ca3af"}}>
-                      <i className="ti ti-circle-check" style={{fontSize:32,display:"block",marginBottom:8,color:"#10b981"}}/>
-                      <p style={{fontSize:13}}>No absences on record</p>
-                    </div>
-                  :<>
-                    <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
-                      {[{l:"Absent days",v:totDays,bg:"#fef2f2",c:"#991b1b"},
-                        {l:"Late/Left",v:totLate,bg:"#fffbeb",c:"#92400e"},
-                        {l:"Hours lost",v:`${totHrs}h`,bg:"#f3f4f6",c:"#374151"},
-                        ...Object.entries(rc).map(([r,c])=>({l:r,v:c,bg:"#fef2f2",c:"#991b1b"}))
-                      ].map(({l,v,bg,c})=>(
-                        <div key={l} style={{background:bg,borderRadius:10,padding:"8px 14px"}}>
-                          <p style={{margin:0,fontSize:10,color:c,fontWeight:600}}>{l.toUpperCase()}</p>
-                          <p style={{margin:0,fontSize:22,fontWeight:700,color:c}}>{v}</p>
-                        </div>
-                      ))}
-                    </div>
-                    <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:8}}>
-                      {[...profileAbs].reverse().map((a,i)=>{
-                        const absDays=DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="");
-                        const lateDays=DAYS.filter(d=>a[`${d}_lateReason`]&&a[`${d}_lateReason`]!=="");
-                        if(!absDays.length&&!lateDays.length) return null;
-                        return (
-                          <div key={i} style={{padding:"10px 12px",background:"#f9fafb",borderRadius:8,borderLeft:"3px solid #fca5a5"}}>
-                            <p style={{margin:"0 0 6px",fontSize:12,color:"#6b7280",fontWeight:600}}>Week ending {fmtDate(a.weekEnd)}</p>
-                            <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                              {absDays.map(d=><span key={d} className="dp-abs">{DAY_LABELS[d]}: {a[`${d}_absent`]}</span>)}
-                              {lateDays.map(d=><span key={d} className="dp-late">{DAY_LABELS[d]}: {a[`${d}_lateReason`]} ({a[`${d}_lateHours`]}h)</span>)}
-                            </div>
+              {profileLoad?<p style={{fontSize:13,color:"#9ca3af",textAlign:"center",padding:"20px 0"}}>Loading...</p>
+                :totDays===0&&totLate===0?<div style={{textAlign:"center",padding:"20px 0",color:"#9ca3af"}}><i className="ti ti-circle-check" style={{fontSize:32,display:"block",marginBottom:8,color:"#10b981"}}/><p style={{fontSize:13}}>No absences on record</p></div>
+                :<>
+                  <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
+                    {[{l:"Absent days",v:totDays,bg:"#fef2f2",c:"#991b1b"},{l:"Late/Left",v:totLate,bg:"#fffbeb",c:"#92400e"},{l:"Hours lost",v:`${totHrs}h`,bg:"#f3f4f6",c:"#374151"},...Object.entries(rc).map(([r,c])=>({l:r,v:c,bg:"#fef2f2",c:"#991b1b"}))].map(({l,v,bg,c})=>(
+                      <div key={l} style={{background:bg,borderRadius:10,padding:"8px 14px"}}><p style={{margin:0,fontSize:10,color:c,fontWeight:600}}>{l.toUpperCase()}</p><p style={{margin:0,fontSize:22,fontWeight:700,color:c}}>{v}</p></div>
+                    ))}
+                  </div>
+                  <div style={{maxHeight:180,overflowY:"auto",display:"flex",flexDirection:"column",gap:8}}>
+                    {[...profileAbs].reverse().map((a,i)=>{
+                      const aD=DAYS.filter(d=>a[`${d}_absent`]&&a[`${d}_absent`]!=="");
+                      const lD=DAYS.filter(d=>a[`${d}_lateReason`]&&a[`${d}_lateReason`]!=="");
+                      if(!aD.length&&!lD.length)return null;
+                      return(
+                        <div key={i} style={{padding:"10px 12px",background:"#f9fafb",borderRadius:8,borderLeft:"3px solid #E2001A"}}>
+                          <p style={{margin:"0 0 6px",fontSize:12,color:"#6b7280",fontWeight:600}}>Week ending {fmtDate(a.weekEnd)}</p>
+                          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                            {aD.map(d=><span key={d} className="dp-abs">{DAY_LABELS[d]}: {a[`${d}_absent`]}</span>)}
+                            {lD.map(d=><span key={d} className="dp-late">{DAY_LABELS[d]}: {a[`${d}_lateReason`]} ({a[`${d}_lateHours`]}h)</span>)}
                           </div>
-                        );
-                      })}
-                    </div>
-                  </>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
               }
             </div>
           </div>
