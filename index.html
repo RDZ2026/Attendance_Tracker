@@ -184,6 +184,8 @@ function App(){
   const [pwModal,setPwModal]       = useState(false);
   const [pwForm,setPwForm]         = useState({current:"",newPw:"",confirm:""});
   const [pwError,setPwError]       = useState("");
+  const [editPending,setEditPending]= useState(null);
+  const [editForm,setEditForm]     = useState({});
   const [reportRange,setReportRange]= useState("month");
   const [allAbsData,setAllAbsData] = useState([]);
   const [allAbsLoad,setAllAbsLoad] = useState(false);
@@ -282,6 +284,12 @@ function App(){
     const res=await call({action:"changePassword",username:session.username,currentPassword:pwForm.current,newPassword:pwForm.newPw});
     if(res?.success){notify("Password changed");setPwModal(false);setPwForm({current:"",newPw:"",confirm:""});setPwError("");}
     else setPwError(res?.error||"Failed — check your current password");
+  };
+
+  const saveEditedPending=async()=>{
+    const res=await call({action:"updatePendingReport",data:editForm});
+    if(res?.success){notify("Request updated");setEditPending(null);loadPending();}
+    else notify("Update failed","error");
   };
 
   const sendReminder=async()=>{setSending(true);const res=await call({action:"sendReminder",weekEnd:weekEndStr});setSending(false);if(res?.success)notify("Reminder sent!");else notify("Failed","error");};
@@ -543,15 +551,22 @@ function App(){
           {pending.length>0&&(
             <div className="card" style={{marginBottom:16,border:"1px solid #fecaca"}}>
               <p style={{fontSize:11,color:"#991b1b",fontWeight:600,letterSpacing:.6,marginBottom:12}}><i className="ti ti-clock" style={{fontSize:12,marginRight:5}}/>PENDING EMPLOYEE SUBMISSIONS — {pending.length}</p>
-              <div className="pending-header"><span>NAME</span><span>DEPT</span><span>TYPE</span><span>REASON</span><span>WORKDAY</span><span>ACTION</span></div>
+              <div style={{display:"grid",gridTemplateColumns:"1.2fr 0.8fr 1fr 0.8fr 0.6fr 0.6fr auto",gap:8,padding:"10px 16px",fontSize:11,color:"#6b7280",fontWeight:600,letterSpacing:.5,borderBottom:"1px solid #e5e7eb"}}>
+                <span>NAME</span><span>DEPT</span><span>TYPE</span><span>DATE</span><span>HRS</span><span>WORKDAY</span><span>ACTION</span>
+              </div>
               {pending.map(p=>(
-                <div key={p.id} className="pending-row">
-                  <span style={{fontWeight:600,fontSize:13}}>{p.name}</span>
+                <div key={p.id} style={{display:"grid",gridTemplateColumns:"1.2fr 0.8fr 1fr 0.8fr 0.6fr 0.6fr auto",gap:8,padding:"10px 16px",alignItems:"center",fontSize:13,borderBottom:"1px solid #f3f4f6"}}>
+                  <div>
+                    <p style={{margin:0,fontWeight:600,fontSize:13}}>{p.name}</p>
+                    <p style={{margin:0,fontSize:11,color:"#9ca3af"}}>{p.reason}</p>
+                  </div>
                   <span style={{fontSize:12,color:"#6b7280"}}>{p.department}</span>
                   <span style={{fontSize:12}}>{p.attType}</span>
-                  <span style={{fontSize:12,color:"#6b7280"}}>{p.reason}</span>
+                  <span style={{fontSize:12,fontFamily:"monospace",color:"#6b7280"}}>{p.absDate||"—"}</span>
+                  <span style={{fontWeight:600,color:"#E2001A",fontSize:13}}>{p.hoursLost||"8"}h</span>
                   <span>{p.isTemp==="Temp"?<span className="badge gray">Temp</span>:<span className={`badge ${p.workday==="Yes"?"green":"red"}`}>{p.workday}</span>}</span>
-                  <div style={{display:"flex",gap:5}}>
+                  <div style={{display:"flex",gap:4}}>
+                    <button style={{fontSize:11,padding:"4px 8px",color:"#1d4ed8",borderColor:"#93c5fd"}} onClick={()=>{setEditForm({...p});setEditPending(p);}}>✏</button>
                     <button className="success" style={{fontSize:11,padding:"4px 8px"}} onClick={()=>approvePending(p.id)}>✓</button>
                     <button className="danger"  style={{fontSize:11,padding:"4px 8px"}} onClick={()=>rejectPending(p.id)}>✕</button>
                   </div>
@@ -964,6 +979,59 @@ function App(){
           </div>
         );
       })()}
+
+      {/* ── EDIT PENDING MODAL ── */}
+      {editPending&&(
+        <div className="overlay" onClick={e=>{if(e.target===e.currentTarget)setEditPending(null);}}>
+          <div className="modal" style={{maxWidth:460}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+              <h2 style={{fontSize:18,fontWeight:600}}>Edit request</h2>
+              <button onClick={()=>setEditPending(null)} style={{border:"none",background:"none",padding:4}}><i className="ti ti-x" style={{fontSize:18,color:"#9ca3af"}}/></button>
+            </div>
+            <p style={{fontSize:13,color:"#6b7280",marginBottom:20}}><strong>{editPending.name}</strong> · {editPending.department}</p>
+            <div style={{display:"flex",flexDirection:"column",gap:14}}>
+              <div>
+                <label className="field">Date of absence</label>
+                <input type="date" value={editForm.absDate||""} onChange={e=>setEditForm(p=>({...p,absDate:e.target.value}))}/>
+              </div>
+              <div>
+                <label className="field">Attendance type</label>
+                <select value={editForm.attType||""} onChange={e=>setEditForm(p=>({...p,attType:e.target.value}))}>
+                  {["Absent - Full Day","Late Arrival","Left Early","Late Arrival & Left Early"].map(t=><option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="field">Reason</label>
+                <select value={editForm.reason||""} onChange={e=>setEditForm(p=>({...p,reason:e.target.value}))}>
+                  {["Sick","No Call / No Show","Personal","Approved Leave","Traffic / Car Issues","Appointment","Other"].map(r=><option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="field">Hours lost</label>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                  <input type="number" min="0.5" max="8" step="0.5" value={editForm.hoursLost||""} onChange={e=>setEditForm(p=>({...p,hoursLost:e.target.value}))} placeholder="e.g. 2"/>
+                  <select value={editForm.hoursLost||""} onChange={e=>setEditForm(p=>({...p,hoursLost:e.target.value}))}>
+                    <option value="">Quick select...</option>
+                    {["0.5","1","1.5","2","2.5","3","3.5","4","4.5","5","5.5","6","6.5","7","7.5","8"].map(h=><option key={h} value={h}>{h}h</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="field">Workday submitted?</label>
+                <select value={editForm.workday||""} onChange={e=>setEditForm(p=>({...p,workday:e.target.value}))}>
+                  <option value="N/A">N/A (Temp)</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                </select>
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8,justifyContent:"flex-end",marginTop:20}}>
+              <button onClick={()=>setEditPending(null)}>Cancel</button>
+              <button className="primary" onClick={saveEditedPending}><i className="ti ti-check" style={{fontSize:13}}/> Save changes</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {toast&&<div className={`toast ${toast.type}`}>{toast.msg}</div>}
     </div>
